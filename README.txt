@@ -1,4 +1,4 @@
-Drummer's Metronome
+Drummers' Sidekick
 By: Denver Coneybeare <denver@sleepydragon.org>
 Nov 29, 2015
 

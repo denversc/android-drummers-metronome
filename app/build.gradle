@@ -1,15 +1,9 @@
 apply plugin: 'com.android.application'
+apply from: rootProject.file('common.gradle')
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion '23.0.2'
-
     defaultConfig {
-        applicationId 'org.sleepydragon.drumetro'
-        versionCode 1
-        versionName 'master'
-        minSdkVersion 10
-        targetSdkVersion 23
+        applicationId 'org.sleepydragon.drummersk'
         resConfigs 'en'
     }
 
@@ -30,15 +24,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
         }
     }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
-    }
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:23.1.1'
-    compile 'com.android.support:appcompat-v7:23.1.1'
-    compile 'com.android.support:design:23.1.1'
+    releaseCompile project(path: ':lib:main', configuration: 'release')
+    debugCompile project(path: ':lib:main', configuration: 'debug')
 }
