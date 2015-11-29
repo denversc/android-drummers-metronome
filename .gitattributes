@@ -1,0 +1,10 @@
+# use LF line endings by default in text files
+* text eol=lf
+
+# some files need to have Windows CRLF line endings
+*.bat text eol=crlf
+
+# some files are by nature binary
+*.jar binary
+*.png binary
+*.keystore binary
