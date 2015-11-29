@@ -1,1 +1,8 @@
+# Gradle-generated files
 /.gradle/
+/build/
+
+# Android Studio files
+/.idea/
+*.iml
+/local.properties
