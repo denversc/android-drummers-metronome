@@ -1,0 +1,9 @@
+apply plugin: 'com.android.library'
+
+android {
+    publishNonDefault true
+}
+
+dependencies {
+    compile 'com.android.support:support-annotations:23.1.1'
+}

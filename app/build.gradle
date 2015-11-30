@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     defaultConfig {
-        applicationId 'org.sleepydragon.drummersk'
+        applicationId 'org.sleepydragon.drumsk'
         resConfigs 'en'
     }
 
@@ -32,4 +32,6 @@ dependencies {
     debugCompile project(path: ':lib:ui', configuration: 'debug')
     releaseCompile project(path: ':lib:ui-api', configuration: 'release')
     debugCompile project(path: ':lib:ui-api', configuration: 'debug')
+    releaseCompile project(path: ':lib:util', configuration: 'release')
+    debugCompile project(path: ':lib:util', configuration: 'debug')
 }
