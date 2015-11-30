@@ -8,6 +8,7 @@
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:name=".ApplicationImpl"
+        android:theme="@style/AppTheme"
         />
 
 </manifest>
