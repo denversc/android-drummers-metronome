@@ -1,3 +1,5 @@
 include ':app'
 
 include ':lib:main'
+include ':lib:ui'
+include ':lib:ui-api'

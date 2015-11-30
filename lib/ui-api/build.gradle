@@ -1,0 +1,9 @@
+apply plugin: 'com.android.library'
+apply from: rootProject.file('common.gradle')
+
+android {
+    publishNonDefault true
+}
+
+dependencies {
+}

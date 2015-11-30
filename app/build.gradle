@@ -29,4 +29,8 @@ android {
 dependencies {
     releaseCompile project(path: ':lib:main', configuration: 'release')
     debugCompile project(path: ':lib:main', configuration: 'debug')
+    releaseCompile project(path: ':lib:ui', configuration: 'release')
+    debugCompile project(path: ':lib:ui', configuration: 'debug')
+    releaseCompile project(path: ':lib:ui-api', configuration: 'release')
+    debugCompile project(path: ':lib:ui-api', configuration: 'debug')
 }
