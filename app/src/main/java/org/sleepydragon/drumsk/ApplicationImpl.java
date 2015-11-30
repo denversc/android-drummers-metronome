@@ -3,6 +3,7 @@ package org.sleepydragon.drumsk;
 import android.app.Application;
 import android.support.annotation.NonNull;
 
+import org.sleepydragon.drumsk.main.DevUtils;
 import org.sleepydragon.drumsk.ui.api.Globals;
 import org.sleepydragon.drumsk.ui.api.UiFactory;
 import org.sleepydragon.drumsk.util.LifecycleLogger;
@@ -22,6 +23,7 @@ public class ApplicationImpl extends Application {
         Logger.initialize("drumsk");
         mLifecycleLogger.onCreate();
         super.onCreate();
+        initializeDevUtils();
         initializeUiFactory();
     }
 
@@ -34,6 +36,12 @@ public class ApplicationImpl extends Application {
     private void initializeUiFactory() {
         final UiFactory uiFactory = new UiFactoryImpl();
         Globals.initialize(uiFactory);
+    }
+
+    private void initializeDevUtils() {
+        if (BuildConfig.DEBUG) {
+            DevUtils.initialize(this);
+        }
     }
 
 }

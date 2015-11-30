@@ -5,11 +5,13 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:23.1.1'
-    compile 'com.android.support:support-v4:23.1.1'
-
+    releaseProvided project(path: ':lib:devutil', configuration: 'release')
+    debugCompile project(path: ':lib:devutil', configuration: 'debug')
     releaseCompile project(path: ':lib:ui-api', configuration: 'release')
     debugCompile project(path: ':lib:ui-api', configuration: 'debug')
     releaseCompile project(path: ':lib:util', configuration: 'release')
     debugCompile project(path: ':lib:util', configuration: 'debug')
+
+    compile 'com.android.support:appcompat-v7:23.1.1'
+    compile 'com.android.support:support-v4:23.1.1'
 }

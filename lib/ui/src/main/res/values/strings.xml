@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <public type="string" name="dummy" />
+    <string name="app_name">Drummer\'s Sidekick</string>
 </resources>

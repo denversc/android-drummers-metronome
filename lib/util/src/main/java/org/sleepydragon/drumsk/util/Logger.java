@@ -41,11 +41,15 @@ public class Logger {
     }
 
     public void v(@NonNull final String message, @Nullable Object... args) {
-        Log.v(sTag, formatMessage(message, args));
+        if (BuildConfig.DEBUG) {
+            Log.v(sTag, formatMessage(message, args));
+        }
     }
 
     public void d(@NonNull final String message, @Nullable Object... args) {
-        Log.d(sTag, formatMessage(message, args));
+        if (BuildConfig.DEBUG) {
+            Log.d(sTag, formatMessage(message, args));
+        }
     }
 
     public void i(@NonNull final String message, @Nullable Object... args) {

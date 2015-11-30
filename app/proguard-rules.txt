@@ -1,0 +1,13 @@
+# Remove debug logging
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+}
+-assumenosideeffects class org.sleepydragon.drumsk.util.Logger {
+    public void v(...);
+    public void d(...);
+}
+
+# Suppress warnings about missing devutil classes, since they are a "provided"
+# dependency in release builds and therefore expected to be missing
+-dontwarn org.sleepydragon.drumsk.devutil.**

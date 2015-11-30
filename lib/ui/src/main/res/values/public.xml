@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <public type="style" name="AppTheme" />
+    <public type="style" name="app_theme" />
+    <public type="string" name="app_name" />
 </resources>
