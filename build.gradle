@@ -12,3 +12,11 @@ allprojects {
         jcenter()
     }
 }
+
+subprojects.each { it ->
+    it.afterEvaluate {
+        if (it.extensions.findByName('android') != null) {
+            it.apply(from: rootProject.file('common.gradle'))
+        }
+    }
+}
