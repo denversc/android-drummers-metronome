@@ -4,6 +4,8 @@
     package="org.sleepydragon.drumsk.ui"
     >
 
-    <application />
+    <application
+        android:theme="@style/app_theme"
+        />
 
 </manifest>
