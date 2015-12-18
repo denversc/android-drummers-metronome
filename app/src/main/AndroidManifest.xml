@@ -2,6 +2,8 @@
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.sleepydragon.drumsk"
+    android:sharedUserId="org.sleepydragon.drumsk"
+    android:sharedUserLabel="@string/shared_user_label"
     >
 
     <application
