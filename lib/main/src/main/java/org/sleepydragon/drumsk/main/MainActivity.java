@@ -30,8 +30,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.container);
 
         final FragmentManager fm = getSupportFragmentManager();
+
+        final WorkFragment workFragment;
+        {
+            final Fragment fragment = fm.findFragmentByTag("work");
+            if (fragment != null) {
+                workFragment = (WorkFragment) fragment;
+            } else {
+                workFragment = new WorkFragment();
+                fm.beginTransaction().add(workFragment, "work").commit();
+            }
+        }
+
         if (fm.findFragmentByTag("ui") == null) {
             final Fragment fragment = mUiFactory.createMainFragment();
+            fragment.setTargetFragment(workFragment, 0);
             fm.beginTransaction().add(R.id.container, fragment, "ui").commit();
         }
     }
