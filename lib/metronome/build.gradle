@@ -1,0 +1,10 @@
+apply plugin: 'com.android.library'
+
+android {
+    publishNonDefault true
+}
+
+dependencies {
+    releaseCompile project(path: ':lib:util', configuration: 'release')
+    debugCompile project(path: ':lib:util', configuration: 'debug')
+}

@@ -1,4 +1,4 @@
-package org.sleepydragon.drumsk.main;
+package org.sleepydragon.drumsk.metronome;
 
 import android.content.Context;
 import android.os.Handler;

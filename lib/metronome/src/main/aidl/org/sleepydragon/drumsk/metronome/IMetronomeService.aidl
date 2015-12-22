@@ -1,4 +1,4 @@
-package org.sleepydragon.drumsk.main;
+package org.sleepydragon.drumsk.metronome;
 
 interface IMetronomeService {
     void start(int bpm);

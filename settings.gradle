@@ -2,6 +2,7 @@ include ':app'
 
 include ':lib:devutil'
 include ':lib:main'
+include ':lib:metronome'
 include ':lib:ui'
 include ':lib:ui-api'
 include ':lib:util'

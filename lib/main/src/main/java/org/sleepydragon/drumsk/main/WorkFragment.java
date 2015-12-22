@@ -12,6 +12,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 
+import org.sleepydragon.drumsk.metronome.IMetronomeService;
+import org.sleepydragon.drumsk.metronome.Metronome;
+import org.sleepydragon.drumsk.metronome.MetronomeService;
 import org.sleepydragon.drumsk.ui.api.MainFragment;
 import org.sleepydragon.drumsk.util.LifecycleLogger;
 import org.sleepydragon.drumsk.util.Logger;

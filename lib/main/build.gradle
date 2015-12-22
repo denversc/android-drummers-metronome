@@ -11,6 +11,8 @@ dependencies {
     debugCompile project(path: ':lib:ui-api', configuration: 'debug')
     releaseCompile project(path: ':lib:util', configuration: 'release')
     debugCompile project(path: ':lib:util', configuration: 'debug')
+    releaseCompile project(path: ':lib:metronome', configuration: 'release')
+    debugCompile project(path: ':lib:metronome', configuration: 'debug')
 
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.android.support:support-v4:23.1.1'
