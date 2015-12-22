@@ -5,7 +5,7 @@
     >
 
     <application
-        android:theme="@style/app_theme"
+        android:theme="@style/AppTheme"
         />
 
 </manifest>
