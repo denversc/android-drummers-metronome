@@ -7,7 +7,15 @@ import android.support.v4.app.Fragment;
 
 public abstract class MainFragment extends Fragment implements MainFragmentApi {
 
-    public abstract int getBpm();
+    /**
+     * Returns the user selected beats-per-minute.
+     *
+     * @return the user selected beats-per-minute; returns null if the user's currently-selected
+     * value is not available or invalid.
+     */
+    @Nullable
+    @MainThread
+    public abstract Integer getBpm();
 
     public interface TargetFragmentCallbacks {
 

@@ -2,10 +2,13 @@ package org.sleepydragon.drumsk.ui;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.MainThread;
 import android.support.annotation.Nullable;
+import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 
 import org.sleepydragon.drumsk.ui.api.MainFragment;
 
@@ -14,6 +17,7 @@ import static org.sleepydragon.drumsk.util.Assert.assertNotNull;
 public class MainFragmentImpl extends MainFragment implements View.OnClickListener {
 
     private MetronomeToggleButton mToggleButton;
+    private EditText mBpmEditText;
     private TargetFragmentCallbacks mTargetFragmentCallbacks;
 
     @Override
@@ -34,11 +38,23 @@ public class MainFragmentImpl extends MainFragment implements View.OnClickListen
     public void onViewCreated(final View view, @Nullable final Bundle savedInstanceState) {
         mToggleButton = (MetronomeToggleButton) view.findViewById(R.id.toggle_button);
         mToggleButton.setOnClickListener(this);
+        mBpmEditText = (EditText) view.findViewById(R.id.bpm);
     }
 
     @Override
-    public int getBpm() {
-        return 100;
+    @Nullable
+    @MainThread
+    public Integer getBpm() {
+        final Editable editable = mBpmEditText.getText();
+        if (editable == null) {
+            return null;
+        }
+        final String string = editable.toString();
+        try {
+            return Integer.parseInt(string.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     @Override

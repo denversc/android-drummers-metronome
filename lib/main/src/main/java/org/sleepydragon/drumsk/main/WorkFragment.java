@@ -79,7 +79,14 @@ public class WorkFragment extends Fragment
                 return null;
             }
         } else {
-            final int bpm = fragment.getBpm();
+            final Integer bpm = fragment.getBpm();
+            if (bpm == null) {
+                return null;
+            } else if (bpm < Metronome.BPM_MIN || bpm > Metronome.BPM_MAX) {
+                mLogger.w("invalid BPM: %d (must be greater than or equal to %d and less than "
+                        + "or equal to %d)", bpm, Metronome.BPM_MIN, Metronome.BPM_MAX);
+                return null;
+            }
             try {
                 mMetronomeService.start(bpm);
             } catch (RemoteException e) {
