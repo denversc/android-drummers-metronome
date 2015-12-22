@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.MainThread;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,6 +44,10 @@ public class MainFragmentImpl extends MainFragment implements View.OnClickListen
 
         final Integer bpm = mTargetFragmentCallbacks.getCurrentBpm();
         setBpm(bpm == null ? 100 : bpm);
+
+        final Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
+        final AppCompatActivity activity = (AppCompatActivity) getContext();
+        activity.setSupportActionBar(toolbar);
     }
 
     @Override
@@ -68,7 +74,11 @@ public class MainFragmentImpl extends MainFragment implements View.OnClickListen
 
     @Override
     public void onClick(final View view) {
-        mTargetFragmentCallbacks.onMetronomeToggle(this);
+        if (view == mToggleButton) {
+            mTargetFragmentCallbacks.onMetronomeToggle(this);
+        } else {
+            throw new IllegalArgumentException("unknown view: " + view);
+        }
     }
 
 }
