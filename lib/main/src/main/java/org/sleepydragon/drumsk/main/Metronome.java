@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 import android.os.Vibrator;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
@@ -12,6 +13,7 @@ import android.support.annotation.WorkerThread;
 
 import org.sleepydragon.drumsk.util.AnyThread;
 import org.sleepydragon.drumsk.util.HandlerThreadQuitRunnable;
+import org.sleepydragon.drumsk.util.Logger;
 
 import static android.os.Process.THREAD_PRIORITY_FOREGROUND;
 import static org.sleepydragon.drumsk.util.Assert.assertFalse;
@@ -24,6 +26,9 @@ public class Metronome {
     public static final int BPM_MIN = 1;
     public static final int BPM_MAX = 300;
 
+    @NonNull
+    final Logger mLogger;
+
     private ClickHandler mClickHandler;
     private HandlerThread mClickHandlerThread;
     private boolean mCreated;
@@ -31,6 +36,7 @@ public class Metronome {
     Vibrator mVibrator;
 
     public Metronome() {
+        mLogger = new Logger(this);
     }
 
     @MainThread
@@ -62,11 +68,13 @@ public class Metronome {
             throw new IllegalArgumentException("invalid bpm: " + bpm);
         }
 
-        final int periodMillis = 60_000 / bpm;
+        final long periodMillis = 60_000 / bpm;
+        final ClickInfo clickInfo = new ClickInfo(bpm, periodMillis);
+        clickInfo.nextTime = SystemClock.uptimeMillis();
 
         final Message message = mClickHandler.obtainMessage();
         message.what = ClickHandler.MSG_START_CLICK;
-        message.arg1 = periodMillis;
+        message.obj = clickInfo;
         message.sendToTarget();
     }
 
@@ -108,14 +116,25 @@ public class Metronome {
 
             switch (msg.what) {
                 case MSG_START_CLICK: {
-                    mStarted = true;
-                    mVibrator.vibrate(30);
-                    final int delay = msg.arg1;
-                    sendMessageDelayed(Message.obtain(msg), delay);
+                    final ClickInfo clickInfo = (ClickInfo) msg.obj;
+                    if (!mStarted) {
+                        mStarted = true;
+                        mLogger.i("Starting metronome at %d BPM", clickInfo.bpm);
+                    }
+                    {
+                        final long nextTime = clickInfo.calculateNextTime();
+                        clickInfo.nextTime = nextTime;
+                        final Message nextMessage = Message.obtain(msg);
+                        sendMessageAtTime(nextMessage, nextTime);
+                    }
+                    mVibrator.vibrate(40);
                     break;
                 }
                 case MSG_STOP_CLICK: {
-                    mStarted = false;
+                    if (mStarted) {
+                        mStarted = false;
+                        mLogger.i("Stopping metronome");
+                    }
                     removeMessages(MSG_START_CLICK);
                     break;
                 }
@@ -127,6 +146,29 @@ public class Metronome {
         @AnyThread
         public boolean isStarted() {
             return mStarted;
+        }
+
+    }
+
+    private static class ClickInfo {
+
+        public final int bpm;
+        public final long periodMillis;
+        public long nextTime;
+
+        public ClickInfo(final int bpm, final long periodMillis) {
+            this.bpm = bpm;
+            this.periodMillis = periodMillis;
+        }
+
+        public long calculateNextTime() {
+            final long curTime = SystemClock.uptimeMillis();
+            final long idealNextTime = nextTime + periodMillis;
+            if (idealNextTime >= curTime) {
+                return idealNextTime;
+            } else {
+                return curTime + periodMillis;
+            }
         }
 
     }
