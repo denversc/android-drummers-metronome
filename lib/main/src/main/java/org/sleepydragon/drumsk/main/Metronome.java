@@ -32,6 +32,7 @@ public class Metronome {
     private ClickHandler mClickHandler;
     private HandlerThread mClickHandlerThread;
     private boolean mCreated;
+    private ClickInfo mClickInfo;
 
     Vibrator mVibrator;
 
@@ -62,11 +63,14 @@ public class Metronome {
         mClickHandler.post(new HandlerThreadQuitRunnable(mClickHandlerThread));
     }
 
-    @AnyThread
+    @MainThread
     public void start(final int bpm) {
+        assertMainThread();
         if (bpm < BPM_MIN || bpm > BPM_MAX) {
             throw new IllegalArgumentException("invalid bpm: " + bpm);
         }
+
+        stop();
 
         final long periodMillis = 60_000 / bpm;
         final ClickInfo clickInfo = new ClickInfo(bpm, periodMillis);
@@ -76,11 +80,15 @@ public class Metronome {
         message.what = ClickHandler.MSG_START_CLICK;
         message.obj = clickInfo;
         message.sendToTarget();
+
+        mClickInfo = clickInfo;
     }
 
-    @AnyThread
+    @MainThread
     public void stop() {
+        assertMainThread();
         mClickHandler.sendEmptyMessage(ClickHandler.MSG_STOP_CLICK);
+        mClickInfo = null;
     }
 
     @AnyThread
@@ -88,14 +96,21 @@ public class Metronome {
         return mClickHandler.isStarted();
     }
 
+    @AnyThread
+    public Integer getBpm() {
+        final ClickInfo clickInfo = mClickInfo;
+        return (clickInfo == null) ? null : clickInfo.bpm;
+    }
+
     private class ClickHandler extends Handler {
 
         public static final int MSG_CLOSE = 1;
         public static final int MSG_START_CLICK = 10;
         public static final int MSG_STOP_CLICK = 11;
+        public static final int MSG_CLICK = 12;
 
         private boolean mClosed;
-        private volatile boolean mStarted;
+        private volatile ClickInfo mCurClick;
 
         public ClickHandler(@NonNull final Looper looper) {
             super(looper);
@@ -110,32 +125,32 @@ public class Metronome {
                 mClosed = true;
                 removeMessages(MSG_START_CLICK);
                 removeMessages(MSG_STOP_CLICK);
-                sendEmptyMessage(MSG_STOP_CLICK);
+                removeMessages(MSG_CLICK);
                 return;
             }
 
             switch (msg.what) {
                 case MSG_START_CLICK: {
                     final ClickInfo clickInfo = (ClickInfo) msg.obj;
-                    if (!mStarted) {
-                        mStarted = true;
-                        mLogger.i("Starting metronome at %d BPM", clickInfo.bpm);
-                    }
-                    {
-                        final long nextTime = clickInfo.calculateNextTime();
-                        clickInfo.nextTime = nextTime;
-                        final Message nextMessage = Message.obtain(msg);
-                        sendMessageAtTime(nextMessage, nextTime);
-                    }
-                    mVibrator.vibrate(40);
+                    mClickInfo = clickInfo;
+                    removeMessages(MSG_CLICK);
+                    mLogger.i("Starting metronome at %d BPM", clickInfo.bpm);
+                    sendEmptyMessage(MSG_CLICK);
                     break;
                 }
                 case MSG_STOP_CLICK: {
-                    if (mStarted) {
-                        mStarted = false;
-                        mLogger.i("Stopping metronome");
+                    if (mClickInfo != null) {
+                        mLogger.i("Stopping metronome at %d BPM", mClickInfo.bpm);
                     }
-                    removeMessages(MSG_START_CLICK);
+                    removeMessages(MSG_CLICK);
+                    mClickInfo = null;
+                    break;
+                }
+                case MSG_CLICK: {
+                    final long nextTime = mClickInfo.calculateNextTime();
+                    mClickInfo.nextTime = nextTime;
+                    sendEmptyMessageAtTime(MSG_CLICK, nextTime);
+                    mVibrator.vibrate(40);
                     break;
                 }
                 default:
@@ -145,7 +160,7 @@ public class Metronome {
 
         @AnyThread
         public boolean isStarted() {
-            return mStarted;
+            return (mClickInfo != null);
         }
 
     }

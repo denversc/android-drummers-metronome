@@ -39,6 +39,9 @@ public class MainFragmentImpl extends MainFragment implements View.OnClickListen
         mToggleButton = (MetronomeToggleButton) view.findViewById(R.id.toggle_button);
         mToggleButton.setOnClickListener(this);
         mBpmEditText = (EditText) view.findViewById(R.id.bpm);
+
+        final Integer bpm = mTargetFragmentCallbacks.getCurrentBpm();
+        setBpm(bpm == null ? 100 : bpm);
     }
 
     @Override
@@ -55,6 +58,12 @@ public class MainFragmentImpl extends MainFragment implements View.OnClickListen
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    @Override
+    @MainThread
+    public void setBpm(final int bpm) {
+        mBpmEditText.setText(String.valueOf(bpm));
     }
 
     @Override

@@ -3,6 +3,7 @@ package org.sleepydragon.drumsk.main;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -68,7 +69,7 @@ public class MetronomeService extends Service {
                 throw new IllegalArgumentException("unknown action: " + action);
         }
 
-        return START_REDELIVER_INTENT;
+        return START_NOT_STICKY;
     }
 
     @Nullable
@@ -119,6 +120,12 @@ public class MetronomeService extends Service {
         @Override
         public boolean isStarted() {
             return mMetronome.isStarted();
+        }
+
+        @Override
+        public int getBpm() throws RemoteException {
+            final Integer bpm = mMetronome.getBpm();
+            return (bpm == null) ? -1 : bpm;
         }
 
     }

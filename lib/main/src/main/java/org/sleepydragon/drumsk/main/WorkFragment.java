@@ -16,6 +16,8 @@ import org.sleepydragon.drumsk.ui.api.MainFragment;
 import org.sleepydragon.drumsk.util.LifecycleLogger;
 import org.sleepydragon.drumsk.util.Logger;
 
+import static org.sleepydragon.drumsk.util.Assert.assertMainThread;
+
 public class WorkFragment extends Fragment
         implements MainFragment.TargetFragmentCallbacks, ServiceConnection {
 
@@ -58,6 +60,7 @@ public class WorkFragment extends Fragment
     @MainThread
     @Nullable
     public Boolean onMetronomeToggle(@NonNull final MainFragment fragment) {
+        assertMainThread();
         mLifecycleLogger.log("onMetronomeToggle()");
         if (mMetronomeService == null) {
             return null;
@@ -100,9 +103,41 @@ public class WorkFragment extends Fragment
 
     @Override
     @MainThread
+    @Nullable
+    public Integer getCurrentBpm() {
+        assertMainThread();
+        if (mMetronomeService == null) {
+            return null;
+        }
+
+        final int bpm;
+        try {
+            bpm = mMetronomeService.getBpm();
+        } catch (RemoteException e) {
+            mLogger.e(e, "MetronomeService.getBpm() failed");
+            return null;
+        }
+
+        if (bpm < Metronome.BPM_MIN || bpm > Metronome.BPM_MAX) {
+            return null;
+        }
+
+        return bpm;
+    }
+
+    @Override
+    @MainThread
     public void onServiceConnected(final ComponentName name, final IBinder service) {
         mLifecycleLogger.onServiceConnected(name, service);
         mMetronomeService = IMetronomeService.Stub.asInterface(service);
+
+        final Integer bpm = getCurrentBpm();
+        if (bpm != null) {
+            final HostCallbacks hostCallbacks = (HostCallbacks) getContext();
+            if (hostCallbacks != null) {
+                hostCallbacks.onBpmChanged(this, bpm);
+            }
+        }
     }
 
     @Override
@@ -110,6 +145,13 @@ public class WorkFragment extends Fragment
     public void onServiceDisconnected(final ComponentName name) {
         mLifecycleLogger.onServiceDisconnected(name);
         mMetronomeService = null;
+    }
+
+    public interface HostCallbacks {
+
+        @MainThread
+        void onBpmChanged(@NonNull WorkFragment fragment, final int bpm);
+
     }
 
 }

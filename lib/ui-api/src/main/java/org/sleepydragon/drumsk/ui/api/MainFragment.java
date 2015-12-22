@@ -17,6 +17,14 @@ public abstract class MainFragment extends Fragment implements MainFragmentApi {
     @MainThread
     public abstract Integer getBpm();
 
+    /**
+     * Sets the beats-per-minute to display in the UI, which the user can subsequently change.
+     *
+     * @param bpm the beats-per-minute to display in the UI.
+     */
+    @MainThread
+    public abstract void setBpm(final int bpm);
+
     public interface TargetFragmentCallbacks {
 
         /**
@@ -30,6 +38,16 @@ public abstract class MainFragment extends Fragment implements MainFragmentApi {
         @MainThread
         @Nullable
         Boolean onMetronomeToggle(@NonNull MainFragment fragment);
+
+        /**
+         * Gets the current beats-per-minute to display in the user interface.
+         *
+         * @return the beats-per-minute at which the metronome is running, or null if the metronome
+         * is not running.
+         */
+        @MainThread
+        @Nullable
+        Integer getCurrentBpm();
 
     }
 
