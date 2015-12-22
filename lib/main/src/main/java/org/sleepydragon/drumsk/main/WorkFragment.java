@@ -9,6 +9,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 
 import org.sleepydragon.drumsk.ui.api.MainFragment;
@@ -53,17 +54,41 @@ public class WorkFragment extends Fragment
         super.onDestroy();
     }
 
-    @MainThread
     @Override
-    public void onMetronomeToggle(@NonNull final MainFragment fragment, final boolean on) {
-        mLogger.i("Metronome toggle clicked: on=%s", on);
-        if (mMetronomeService != null) {
+    @MainThread
+    @Nullable
+    public Boolean onMetronomeToggle(@NonNull final MainFragment fragment) {
+        mLifecycleLogger.log("onMetronomeToggle()");
+        if (mMetronomeService == null) {
+            return null;
+        }
+
+        final boolean isStarted;
+        try {
+            isStarted = mMetronomeService.isStarted();
+        } catch (RemoteException e) {
+            mLogger.e(e, "MetronomeService.isStarted() failed");
+            return null;
+        }
+
+        if (isStarted) {
             try {
-                mMetronomeService.setOn(on);
+                mMetronomeService.stop();
             } catch (RemoteException e) {
-                mLogger.e(e, "IMetronomeService.setOn(on=%s) failed", on);
+                mLogger.e(e, "MetronomeService.stop() failed");
+                return null;
+            }
+        } else {
+            final int bpm = fragment.getBpm();
+            try {
+                mMetronomeService.start(bpm);
+            } catch (RemoteException e) {
+                mLogger.e(e, "MetronomeService.start() failed");
+                return null;
             }
         }
+
+        return !isStarted;
     }
 
     @Override

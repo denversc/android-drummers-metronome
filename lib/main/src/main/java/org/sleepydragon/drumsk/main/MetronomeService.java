@@ -10,11 +10,13 @@ import org.sleepydragon.drumsk.util.LifecycleLogger;
 import org.sleepydragon.drumsk.util.Logger;
 
 import static org.sleepydragon.drumsk.util.Assert.assertNotNull;
+import static org.sleepydragon.drumsk.util.Assert.assertTrue;
 
 public class MetronomeService extends Service {
 
     private static final String ACTION_START = "start";
     private static final String ACTION_STOP = "stop";
+    private static final String KEY_BPM = "bpm";
 
     @NonNull
     private final Logger mLogger;
@@ -52,9 +54,12 @@ public class MetronomeService extends Service {
 
         final String action = intent.getAction();
         switch (action) {
-            case ACTION_START:
-                mMetronome.start();
+            case ACTION_START: {
+                assertTrue(intent.hasExtra(KEY_BPM));
+                final int bpm = intent.getIntExtra(KEY_BPM, -1);
+                mMetronome.start(bpm);
                 break;
+            }
             case ACTION_STOP:
                 mMetronome.stop();
                 stopSelf(startId);
@@ -84,14 +89,6 @@ public class MetronomeService extends Service {
         mLifecycleLogger.onRebind(intent);
     }
 
-    void startServiceWithAction(@NonNull final String action) {
-        final Intent intent = new Intent(this, this.getClass());
-        intent.setAction(action);
-        if (startService(intent) == null) {
-            throw new RuntimeException("service not found: " + intent);
-        }
-    }
-
     private class IMetronomeServiceImpl extends IMetronomeService.Stub {
 
         private final Metronome mMetronome;
@@ -101,12 +98,27 @@ public class MetronomeService extends Service {
         }
 
         @Override
-        public void setOn(final boolean on) {
-            if (on) {
-                startServiceWithAction(ACTION_START);
-            } else {
-                startServiceWithAction(ACTION_STOP);
+        public void start(final int bpm) {
+            final Intent intent = new Intent(MetronomeService.this, MetronomeService.class);
+            intent.setAction(ACTION_START);
+            intent.putExtra(KEY_BPM, bpm);
+            if (startService(intent) == null) {
+                throw new RuntimeException("service not found: " + intent);
             }
+        }
+
+        @Override
+        public void stop() {
+            final Intent intent = new Intent(MetronomeService.this, MetronomeService.class);
+            intent.setAction(ACTION_STOP);
+            if (startService(intent) == null) {
+                throw new RuntimeException("service not found: " + intent);
+            }
+        }
+
+        @Override
+        public boolean isStarted() {
+            return mMetronome.isStarted();
         }
 
     }

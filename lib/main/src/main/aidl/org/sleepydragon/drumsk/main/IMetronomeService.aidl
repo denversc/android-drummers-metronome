@@ -1,7 +1,7 @@
 package org.sleepydragon.drumsk.main;
 
 interface IMetronomeService {
-
-    void setOn(boolean on);
-
+    void start(int bpm);
+    void stop();
+    boolean isStarted();
 }
