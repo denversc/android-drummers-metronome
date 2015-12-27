@@ -5,8 +5,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
-import android.os.SystemClock;
-import android.os.Vibrator;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
@@ -29,12 +27,11 @@ public class Metronome {
     @NonNull
     final Logger mLogger;
 
+    private Context mContext;
     private ClickHandler mClickHandler;
     private HandlerThread mClickHandlerThread;
     private boolean mCreated;
-    private ClickInfo mClickInfo;
-
-    Vibrator mVibrator;
+    private Integer mBpm;
 
     public Metronome() {
         mLogger = new Logger(this);
@@ -46,8 +43,8 @@ public class Metronome {
         assertFalse(mCreated);
         assertNotNull(context);
         mCreated = true;
-        mVibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
 
+        mContext = context;
         mClickHandlerThread = new HandlerThread("Metronome", THREAD_PRIORITY_FOREGROUND);
         mClickHandlerThread.start();
         final Looper clickLooper = mClickHandlerThread.getLooper();
@@ -73,47 +70,48 @@ public class Metronome {
         stop();
 
         final long periodMillis = 60_000 / bpm;
-        final ClickInfo clickInfo = new ClickInfo(bpm, periodMillis);
-        clickInfo.nextTime = SystemClock.uptimeMillis();
+        final Click click = new Click(mContext, periodMillis);
 
         final Message message = mClickHandler.obtainMessage();
         message.what = ClickHandler.MSG_START_CLICK;
-        message.obj = clickInfo;
+        message.obj = click;
         message.sendToTarget();
 
-        mClickInfo = clickInfo;
+        mBpm = bpm;
     }
 
     @MainThread
     public void stop() {
         assertMainThread();
         mClickHandler.sendEmptyMessage(ClickHandler.MSG_STOP_CLICK);
-        mClickInfo = null;
+        mBpm = null;
     }
 
     @AnyThread
     public boolean isStarted() {
-        return mClickHandler.isStarted();
+        return (mBpm != null);
     }
 
     @AnyThread
     public Integer getBpm() {
-        final ClickInfo clickInfo = mClickInfo;
-        return (clickInfo == null) ? null : clickInfo.bpm;
+        return mBpm;
     }
 
-    private class ClickHandler extends Handler {
+    private static class ClickHandler extends Handler {
 
         public static final int MSG_CLOSE = 1;
         public static final int MSG_START_CLICK = 10;
         public static final int MSG_STOP_CLICK = 11;
         public static final int MSG_CLICK = 12;
 
+        @NonNull
+        private final Logger mLogger;
+
         private boolean mClosed;
-        private volatile ClickInfo mCurClick;
 
         public ClickHandler(@NonNull final Looper looper) {
             super(looper);
+            mLogger = new Logger(this);
         }
 
         @WorkerThread
@@ -131,58 +129,27 @@ public class Metronome {
 
             switch (msg.what) {
                 case MSG_START_CLICK: {
-                    final ClickInfo clickInfo = (ClickInfo) msg.obj;
-                    mClickInfo = clickInfo;
+                    final Click click = (Click) msg.obj;
+                    mLogger.i("Starting metronome");
                     removeMessages(MSG_CLICK);
-                    mLogger.i("Starting metronome at %d BPM", clickInfo.bpm);
-                    sendEmptyMessage(MSG_CLICK);
+                    final Message clickMessage = obtainMessage(MSG_CLICK, click);
+                    sendMessage(clickMessage);
                     break;
                 }
                 case MSG_STOP_CLICK: {
-                    if (mClickInfo != null) {
-                        mLogger.i("Stopping metronome at %d BPM", mClickInfo.bpm);
-                    }
+                    mLogger.i("Stopping metronome");
                     removeMessages(MSG_CLICK);
-                    mClickInfo = null;
                     break;
                 }
                 case MSG_CLICK: {
-                    final long nextTime = mClickInfo.calculateNextTime();
-                    mClickInfo.nextTime = nextTime;
-                    sendEmptyMessageAtTime(MSG_CLICK, nextTime);
-                    mVibrator.vibrate(40);
+                    final Click click = (Click) msg.obj;
+                    final long nextTime = click.click();
+                    final Message clickMessage = obtainMessage(MSG_CLICK, click);
+                    sendMessageAtTime(clickMessage, nextTime);
                     break;
                 }
                 default:
                     throw new IllegalArgumentException("unknown message: " + msg);
-            }
-        }
-
-        @AnyThread
-        public boolean isStarted() {
-            return (mClickInfo != null);
-        }
-
-    }
-
-    private static class ClickInfo {
-
-        public final int bpm;
-        public final long periodMillis;
-        public long nextTime;
-
-        public ClickInfo(final int bpm, final long periodMillis) {
-            this.bpm = bpm;
-            this.periodMillis = periodMillis;
-        }
-
-        public long calculateNextTime() {
-            final long curTime = SystemClock.uptimeMillis();
-            final long idealNextTime = nextTime + periodMillis;
-            if (idealNextTime >= curTime) {
-                return idealNextTime;
-            } else {
-                return curTime + periodMillis;
             }
         }
 
