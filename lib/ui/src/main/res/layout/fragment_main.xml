@@ -11,6 +11,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:theme="@style/Style.Drumsk.Toolbar"
         app:title="@string/app_name"
         />
 
