@@ -2,52 +2,42 @@ package org.sleepydragon.drumsk.metronome;
 
 import android.content.Context;
 import android.os.SystemClock;
-import android.os.Vibrator;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.annotation.WorkerThread;
 
 /**
  * Stores information about a metronome click.
  */
-class Click {
+abstract class Click {
 
     @NonNull
-    private final Context mContext;
+    protected final Context mContext;
 
-    private final long mPeriodMillis;
-
-    private Vibrator mVibrator;
+    private long mPeriodMillis;
     private long mNextTime;
 
-    public Click(@NonNull final Context context, final long periodMillis) {
+    public Click(@NonNull final Context context) {
         mContext = context;
-        mPeriodMillis = periodMillis;
         mNextTime = SystemClock.uptimeMillis();
     }
 
-    public long click() {
-        final long nextTime = calculateNextTime();
+    public void setNextTime(final long nextTime) {
         mNextTime = nextTime;
-
-        {
-            final Vibrator vibrator = getVibrator();
-            if (vibrator != null) {
-                vibrator.vibrate(50);
-            }
-        }
-
-        return nextTime;
     }
 
-    @Nullable
-    private Vibrator getVibrator() {
-        if (mVibrator == null) {
-            mVibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
-        }
-        return mVibrator;
+    public long getNextTime() {
+        return mNextTime;
     }
 
-    public long calculateNextTime() {
+    public void setPeriodMillis(final long periodMillis) {
+        mPeriodMillis = periodMillis;
+    }
+
+    public long getPeriodMillis() {
+        return mPeriodMillis;
+    }
+
+    private long calculateNextTime() {
         final long curTime = SystemClock.uptimeMillis();
         final long idealNextTime = mNextTime + mPeriodMillis;
         if (idealNextTime >= curTime) {
@@ -57,5 +47,26 @@ class Click {
         }
     }
 
+    private long updateNextTime() {
+        final long nextTime = calculateNextTime();
+        setNextTime(nextTime);
+        return nextTime;
+    }
+
+    @WorkerThread
+    public final long click() {
+        final long nextTime = updateNextTime();
+        doClick();
+        return nextTime;
+    }
+
+    @WorkerThread
+    public abstract void doClick();
+
+    @WorkerThread
+    public abstract void open();
+
+    @WorkerThread
+    public abstract void close();
 
 }
