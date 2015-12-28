@@ -76,7 +76,7 @@ public class Metronome {
         final long nextClickTime = SystemClock.uptimeMillis();
         mAudioClick.setNextTime(nextClickTime);
         mAudioClick.setPeriodMillis(periodMillis);
-        mVibrateClick.setNextTime(nextClickTime);
+        mVibrateClick.setNextTime(nextClickTime + 50L);
         mVibrateClick.setPeriodMillis(periodMillis);
 
         mClickHandler.postClickClick(mAudioClick);
