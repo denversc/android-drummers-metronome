@@ -22,7 +22,7 @@ import static org.sleepydragon.drumsk.util.Assert.assertTrue;
 public class Metronome {
 
     public static final int BPM_MIN = 1;
-    public static final int BPM_MAX = 300;
+    public static final int BPM_MAX = 1000;
 
     private ClickHandler mClickHandler;
     private HandlerThread mClickHandlerThread;
