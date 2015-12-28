@@ -8,6 +8,7 @@ import android.os.Message;
 import android.os.SystemClock;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 
 import org.sleepydragon.drumsk.util.AnyThread;
@@ -29,6 +30,8 @@ public class Metronome {
     private boolean mCreated;
 
     private Integer mBpm;
+    private Boolean mAudioEnabled;
+    private Boolean mVibrateEnabled;
     private AudioClick mAudioClick;
     private VibrateClick mVibrateClick;
 
@@ -64,7 +67,7 @@ public class Metronome {
     }
 
     @MainThread
-    public void start(final int bpm) {
+    public void start(final int bpm, final boolean audioEnabled, final boolean vibrateEnabled) {
         assertMainThread();
         if (bpm < BPM_MIN || bpm > BPM_MAX) {
             throw new IllegalArgumentException("invalid bpm: " + bpm);
@@ -79,10 +82,16 @@ public class Metronome {
         mVibrateClick.setNextTime(nextClickTime + 50L);
         mVibrateClick.setPeriodMillis(periodMillis);
 
-        mClickHandler.postClickClick(mAudioClick);
-        mClickHandler.postClickClick(mVibrateClick);
+        if (audioEnabled) {
+            mClickHandler.postClickClick(mAudioClick);
+        }
+        if (vibrateEnabled) {
+            mClickHandler.postClickClick(mVibrateClick);
+        }
 
         mBpm = bpm;
+        mAudioEnabled = audioEnabled;
+        mVibrateEnabled = vibrateEnabled;
     }
 
     @MainThread
@@ -90,6 +99,8 @@ public class Metronome {
         assertMainThread();
         mClickHandler.removeMessages(ClickHandler.MSG_CLICK_CLICK);
         mBpm = null;
+        mAudioEnabled = null;
+        mVibrateEnabled = null;
     }
 
     @AnyThread
@@ -98,8 +109,21 @@ public class Metronome {
     }
 
     @AnyThread
+    @Nullable
     public Integer getBpm() {
         return mBpm;
+    }
+
+    @AnyThread
+    @Nullable
+    public Boolean isAudioEnabled() {
+        return mAudioEnabled;
+    }
+
+    @AnyThread
+    @Nullable
+    public Boolean isVibrateEnabled() {
+        return mVibrateEnabled;
     }
 
     private static class ClickHandler extends Handler {

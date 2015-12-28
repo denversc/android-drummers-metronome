@@ -2,9 +2,9 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     >
 
     <android.support.v7.widget.Toolbar
@@ -19,6 +19,8 @@
         android:id="@+id/toggle_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingTop="30dp"
+        android:paddingBottom="30dp"
         android:text="Toggle"
         />
 
@@ -26,8 +28,28 @@
         android:id="@+id/bpm"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
         android:inputType="number"
         android:text="100"
+        />
+
+    <CheckBox
+        android:id="@+id/vibrate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:text="Vibrate"
+        />
+
+    <CheckBox
+        android:id="@+id/audio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:text="Audio"
         />
 
 </LinearLayout>

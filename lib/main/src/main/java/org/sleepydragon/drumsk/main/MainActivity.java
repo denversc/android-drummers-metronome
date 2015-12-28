@@ -62,8 +62,17 @@ public class MainActivity extends AppCompatActivity implements WorkFragment.Host
 
     @Override
     @MainThread
-    public void onBpmChanged(@NonNull final WorkFragment fragment, final int bpm) {
-        mMainFragment.setBpm(bpm);
+    public void onMetronomeChanged(@NonNull final WorkFragment fragment, final Integer bpm,
+            final Boolean audioEnabled, final Boolean vibrateEnabled) {
+        if (bpm != null) {
+            mMainFragment.setBpm(bpm);
+        }
+        if (audioEnabled != null) {
+            mMainFragment.setAudioEnabled(audioEnabled);
+        }
+        if (vibrateEnabled != null) {
+            mMainFragment.setVibrateEnabled(vibrateEnabled);
+        }
     }
 
 }

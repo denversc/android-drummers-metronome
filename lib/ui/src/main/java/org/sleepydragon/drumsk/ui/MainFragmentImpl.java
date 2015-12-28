@@ -10,6 +10,7 @@ import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.EditText;
 
 import org.sleepydragon.drumsk.ui.api.MainFragment;
@@ -20,6 +21,8 @@ public class MainFragmentImpl extends MainFragment implements View.OnClickListen
 
     private MetronomeToggleButton mToggleButton;
     private EditText mBpmEditText;
+    private CheckBox mVibrateCheckBox;
+    private CheckBox mAudioCheckBox;
     private TargetFragmentCallbacks mTargetFragmentCallbacks;
 
     @Override
@@ -41,6 +44,8 @@ public class MainFragmentImpl extends MainFragment implements View.OnClickListen
         mToggleButton = (MetronomeToggleButton) view.findViewById(R.id.toggle_button);
         mToggleButton.setOnClickListener(this);
         mBpmEditText = (EditText) view.findViewById(R.id.bpm);
+        mVibrateCheckBox = (CheckBox) view.findViewById(R.id.vibrate);
+        mAudioCheckBox = (CheckBox) view.findViewById(R.id.audio);
 
         final Integer bpm = mTargetFragmentCallbacks.getCurrentBpm();
         setBpm(bpm == null ? 100 : bpm);
@@ -70,6 +75,30 @@ public class MainFragmentImpl extends MainFragment implements View.OnClickListen
     @MainThread
     public void setBpm(final int bpm) {
         mBpmEditText.setText(String.valueOf(bpm));
+    }
+
+    @Override
+    @MainThread
+    public boolean isVibrateEnabled() {
+        return mVibrateCheckBox.isChecked();
+    }
+
+    @Override
+    @MainThread
+    public void setVibrateEnabled(final boolean enabled) {
+        mVibrateCheckBox.setChecked(enabled);
+    }
+
+    @Override
+    @MainThread
+    public boolean isAudioEnabled() {
+        return mAudioCheckBox.isChecked();
+    }
+
+    @Override
+    @MainThread
+    public void setAudioEnabled(final boolean enabled) {
+        mAudioCheckBox.setChecked(enabled);
     }
 
     @Override

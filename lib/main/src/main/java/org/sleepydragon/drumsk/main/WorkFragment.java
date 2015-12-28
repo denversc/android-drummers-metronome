@@ -85,6 +85,8 @@ public class WorkFragment extends Fragment
                 return null;
             }
         } else {
+            final boolean audioEnabled = fragment.isAudioEnabled();
+            final boolean vibrateEnabled = fragment.isVibrateEnabled();
             final Integer bpm = fragment.getBpm();
             if (bpm == null) {
                 return null;
@@ -94,7 +96,7 @@ public class WorkFragment extends Fragment
                 return null;
             }
             try {
-                mMetronomeService.start(bpm);
+                mMetronomeService.start(bpm, audioEnabled, vibrateEnabled);
             } catch (RemoteException e) {
                 mLogger.e(e, "MetronomeService.start() failed");
                 return null;
@@ -129,17 +131,57 @@ public class WorkFragment extends Fragment
     }
 
     @Override
+    @Nullable
+    @MainThread
+    public Boolean getCurrentAudioEnabled() {
+        assertMainThread();
+        if (mMetronomeService == null) {
+            return null;
+        }
+
+        final int enabled;
+        try {
+            enabled = mMetronomeService.isAudioEnabled();
+        } catch (RemoteException e) {
+            mLogger.e(e, "MetronomeService.isAudioEnabled() failed");
+            return null;
+        }
+
+        return toBoolean(enabled);
+    }
+
+    @Override
+    @Nullable
+    @MainThread
+    public Boolean getCurrentVibrateEnabled() {
+        assertMainThread();
+        if (mMetronomeService == null) {
+            return null;
+        }
+
+        final int enabled;
+        try {
+            enabled = mMetronomeService.isVibrateEnabled();
+        } catch (RemoteException e) {
+            mLogger.e(e, "MetronomeService.isVibrateEnabled() failed");
+            return null;
+        }
+
+        return toBoolean(enabled);
+    }
+
+    @Override
     @MainThread
     public void onServiceConnected(final ComponentName name, final IBinder service) {
         mLifecycleLogger.onServiceConnected(name, service);
         mMetronomeService = IMetronomeService.Stub.asInterface(service);
 
-        final Integer bpm = getCurrentBpm();
-        if (bpm != null) {
-            final HostCallbacks hostCallbacks = (HostCallbacks) getContext();
-            if (hostCallbacks != null) {
-                hostCallbacks.onBpmChanged(this, bpm);
-            }
+        final HostCallbacks hostCallbacks = (HostCallbacks) getContext();
+        if (hostCallbacks != null) {
+            final Integer bpm = getCurrentBpm();
+            final Boolean audioEnabled = getCurrentAudioEnabled();
+            final Boolean vibrateEnabled = getCurrentVibrateEnabled();
+            hostCallbacks.onMetronomeChanged(this, bpm, audioEnabled, vibrateEnabled);
         }
     }
 
@@ -150,10 +192,21 @@ public class WorkFragment extends Fragment
         mMetronomeService = null;
     }
 
+    private static Boolean toBoolean(final int value) {
+        if (value == 0) {
+            return false;
+        } else if (value == 1) {
+            return true;
+        } else {
+            return null;
+        }
+    }
+
     public interface HostCallbacks {
 
         @MainThread
-        void onBpmChanged(@NonNull WorkFragment fragment, final int bpm);
+        void onMetronomeChanged(@NonNull WorkFragment fragment, Integer bpm, Boolean audioEnabled,
+                Boolean vibrateEnabled);
 
     }
 

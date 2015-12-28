@@ -18,6 +18,8 @@ public class MetronomeService extends Service {
     private static final String ACTION_START = "start";
     private static final String ACTION_STOP = "stop";
     private static final String KEY_BPM = "bpm";
+    private static final String KEY_AUDIO_ENABLED = "audio";
+    private static final String KEY_VIBRATE_ENABLED = "vibrate";
 
     @NonNull
     private final Logger mLogger;
@@ -58,7 +60,11 @@ public class MetronomeService extends Service {
             case ACTION_START: {
                 assertTrue(intent.hasExtra(KEY_BPM));
                 final int bpm = intent.getIntExtra(KEY_BPM, -1);
-                mMetronome.start(bpm);
+                assertTrue(intent.hasExtra(KEY_AUDIO_ENABLED));
+                final boolean audioEnabled = intent.getBooleanExtra(KEY_AUDIO_ENABLED, false);
+                assertTrue(intent.hasExtra(KEY_VIBRATE_ENABLED));
+                final boolean vibrateEnabled = intent.getBooleanExtra(KEY_VIBRATE_ENABLED, false);
+                mMetronome.start(bpm, audioEnabled, vibrateEnabled);
                 break;
             }
             case ACTION_STOP:
@@ -99,10 +105,12 @@ public class MetronomeService extends Service {
         }
 
         @Override
-        public void start(final int bpm) {
+        public void start(final int bpm, final boolean audioEnabled, final boolean vibrateEnabled) {
             final Intent intent = new Intent(MetronomeService.this, MetronomeService.class);
             intent.setAction(ACTION_START);
             intent.putExtra(KEY_BPM, bpm);
+            intent.putExtra(KEY_AUDIO_ENABLED, audioEnabled);
+            intent.putExtra(KEY_VIBRATE_ENABLED, vibrateEnabled);
             if (startService(intent) == null) {
                 throw new RuntimeException("service not found: " + intent);
             }
@@ -123,11 +131,33 @@ public class MetronomeService extends Service {
         }
 
         @Override
+        public int isAudioEnabled() {
+            final Boolean value = mMetronome.isAudioEnabled();
+            return toInteger(value);
+        }
+
+        @Override
+        public int isVibrateEnabled() {
+            final Boolean value = mMetronome.isVibrateEnabled();
+            return toInteger(value);
+        }
+
+        @Override
         public int getBpm() throws RemoteException {
             final Integer bpm = mMetronome.getBpm();
             return (bpm == null) ? -1 : bpm;
         }
 
+    }
+
+    static int toInteger(@Nullable final Boolean value) {
+        if (value == null) {
+            return -1;
+        } else if (value) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
 }
