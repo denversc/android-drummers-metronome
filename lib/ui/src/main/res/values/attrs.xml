@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="BpmView">
+        <attr name="circleColor" format="color" />
+        <attr name="textColor" format="color" />
+        <attr name="bpm" format="integer" />
+        <attr name="textCirclePadding" format="dimension" />
+    </declare-styleable>
+</resources>

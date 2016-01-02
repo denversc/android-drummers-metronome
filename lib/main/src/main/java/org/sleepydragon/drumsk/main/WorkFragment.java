@@ -78,32 +78,69 @@ public class WorkFragment extends Fragment
         }
 
         if (isStarted) {
-            try {
-                mMetronomeService.stop();
-            } catch (RemoteException e) {
-                mLogger.e(e, "MetronomeService.stop() failed");
-                return null;
-            }
+            return stopMetronome();
         } else {
-            final boolean audioEnabled = fragment.isAudioEnabled();
-            final boolean vibrateEnabled = fragment.isVibrateEnabled();
-            final Integer bpm = fragment.getBpm();
-            if (bpm == null) {
-                return null;
-            } else if (bpm < Metronome.BPM_MIN || bpm > Metronome.BPM_MAX) {
-                mLogger.w("invalid BPM: %d (must be greater than or equal to %d and less than "
-                        + "or equal to %d)", bpm, Metronome.BPM_MIN, Metronome.BPM_MAX);
-                return null;
-            }
-            try {
-                mMetronomeService.start(bpm, audioEnabled, vibrateEnabled);
-            } catch (RemoteException e) {
-                mLogger.e(e, "MetronomeService.start() failed");
-                return null;
-            }
+            return startMetronome(fragment);
+        }
+    }
+
+    @MainThread
+    private Boolean startMetronome(@NonNull final MainFragment fragment) {
+        final boolean audioEnabled = fragment.isAudioEnabled();
+        final boolean vibrateEnabled = fragment.isVibrateEnabled();
+        final Integer bpm = fragment.getBpm();
+        if (bpm == null) {
+            return null;
+        } else if (bpm < Metronome.BPM_MIN || bpm > Metronome.BPM_MAX) {
+            mLogger.w("invalid BPM: %d (must be greater than or equal to %d and less than "
+                    + "or equal to %d)", bpm, Metronome.BPM_MIN, Metronome.BPM_MAX);
+            return null;
+        }
+        try {
+            mMetronomeService.start(bpm, audioEnabled, vibrateEnabled);
+        } catch (RemoteException e) {
+            mLogger.e(e, "MetronomeService.start() failed");
+            return null;
         }
 
-        return !isStarted;
+        return true;
+    }
+
+    @MainThread
+    private Boolean stopMetronome() {
+        try {
+            mMetronomeService.stop();
+        } catch (RemoteException e) {
+            mLogger.e(e, "MetronomeService.stop() failed");
+            return null;
+        }
+        return false;
+    }
+
+    @Override
+    @MainThread
+    public void onBpmChange(@NonNull final MainFragment fragment) {
+        if (mMetronomeService == null) {
+            return;
+        }
+
+        final Integer bpm = fragment.getBpm();
+        if (bpm == null) {
+            return;
+        }
+
+        final boolean started;
+        try {
+            started = mMetronomeService.isStarted();
+        } catch (RemoteException e) {
+            mLogger.e(e, "MetronomeService.isStarted() failed");
+            return;
+        }
+
+        if (started) {
+            stopMetronome();
+            startMetronome(fragment);
+        }
     }
 
     @Override

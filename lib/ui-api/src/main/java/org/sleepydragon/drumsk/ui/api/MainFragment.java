@@ -72,6 +72,14 @@ public abstract class MainFragment extends Fragment implements MainFragmentApi {
         Boolean onMetronomeToggle(@NonNull MainFragment fragment);
 
         /**
+         * Invoked when the user changes the BPM.
+         *
+         * @param fragment the fragment from which this event is originating.
+         */
+        @MainThread
+        void onBpmChange(@NonNull MainFragment fragment);
+
+        /**
          * Gets the current beats-per-minute to display in the user interface.
          *
          * @return the beats-per-minute at which the metronome is running, or null if the metronome

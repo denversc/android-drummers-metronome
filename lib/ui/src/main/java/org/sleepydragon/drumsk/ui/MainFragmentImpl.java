@@ -6,21 +6,19 @@ import android.support.annotation.MainThread;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.EditText;
 
 import org.sleepydragon.drumsk.ui.api.MainFragment;
 
 import static org.sleepydragon.drumsk.util.Assert.assertNotNull;
 
-public class MainFragmentImpl extends MainFragment implements View.OnClickListener {
+public class MainFragmentImpl extends MainFragment
+        implements View.OnClickListener, View.OnLongClickListener {
 
-    private MetronomeToggleButton mToggleButton;
-    private EditText mBpmEditText;
+    private BpmView mBpmView;
     private CheckBox mVibrateCheckBox;
     private CheckBox mAudioCheckBox;
     private TargetFragmentCallbacks mTargetFragmentCallbacks;
@@ -41,9 +39,9 @@ public class MainFragmentImpl extends MainFragment implements View.OnClickListen
 
     @Override
     public void onViewCreated(final View view, @Nullable final Bundle savedInstanceState) {
-        mToggleButton = (MetronomeToggleButton) view.findViewById(R.id.toggle_button);
-        mToggleButton.setOnClickListener(this);
-        mBpmEditText = (EditText) view.findViewById(R.id.bpm);
+        mBpmView = (BpmView) view.findViewById(R.id.bpm);
+        mBpmView.setOnClickListener(this);
+        mBpmView.setOnLongClickListener(this);
         mVibrateCheckBox = (CheckBox) view.findViewById(R.id.vibrate);
         mAudioCheckBox = (CheckBox) view.findViewById(R.id.audio);
 
@@ -59,22 +57,13 @@ public class MainFragmentImpl extends MainFragment implements View.OnClickListen
     @Nullable
     @MainThread
     public Integer getBpm() {
-        final Editable editable = mBpmEditText.getText();
-        if (editable == null) {
-            return null;
-        }
-        final String string = editable.toString();
-        try {
-            return Integer.parseInt(string.trim());
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return mBpmView.getBpm();
     }
 
     @Override
     @MainThread
     public void setBpm(final int bpm) {
-        mBpmEditText.setText(String.valueOf(bpm));
+        mBpmView.setBpm(bpm);
     }
 
     @Override
@@ -103,11 +92,35 @@ public class MainFragmentImpl extends MainFragment implements View.OnClickListen
 
     @Override
     public void onClick(final View view) {
-        if (view == mToggleButton) {
+        if (view == mBpmView) {
             mTargetFragmentCallbacks.onMetronomeToggle(this);
         } else {
             throw new IllegalArgumentException("unknown view: " + view);
         }
+    }
+
+    @Override
+    public boolean onLongClick(final View view) {
+        if (view == mBpmView) {
+            final BpmDialogFragment dialog = new BpmDialogFragment();
+            final Integer bpm = mBpmView.getBpm();
+            if (bpm != null) {
+                final Bundle args = new Bundle();
+                args.putInt(BpmDialogFragment.ARG_BPM, bpm);
+                dialog.setArguments(args);
+            }
+            dialog.show(getFragmentManager(), "BpmDialogFragment");
+            dialog.setTargetFragment(this, 0);
+            return true;
+        } else {
+            throw new IllegalArgumentException("unknown view: " + view);
+        }
+    }
+
+    @MainThread
+    void onUserSelectedBpmFromDialog(final int bpm) {
+        mBpmView.setBpm(bpm);
+        mTargetFragmentCallbacks.onBpmChange(this);
     }
 
 }
