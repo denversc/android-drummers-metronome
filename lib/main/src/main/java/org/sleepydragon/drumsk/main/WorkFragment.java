@@ -182,16 +182,8 @@ public class WorkFragment extends Fragment
 
     @Override
     @MainThread
-    @Nullable
-    public Integer getCurrentBpm() {
-        final MetronomeConfig config = getMetronomeConfig();
-        if (config == null) {
-            return null;
-        }
-        if (config.bpm < Metronome.BPM_MIN || config.bpm > Metronome.BPM_MAX) {
-            return null;
-        }
-        return config.bpm;
+    public void updateUiFromMetronome() {
+        notifyHostOfMetronomeState();
     }
 
     @Override
@@ -220,6 +212,10 @@ public class WorkFragment extends Fragment
 
     @MainThread
     private void notifyHostOfMetronomeState() {
+        if (mMetronomeService == null) {
+            return;
+        }
+
         final HostCallbacks hostCallbacks = (HostCallbacks) getContext();
         if (hostCallbacks == null) {
             return;

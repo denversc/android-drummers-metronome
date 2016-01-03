@@ -6,6 +6,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -105,6 +108,20 @@ public class BpmView extends View {
 
     public boolean isPlaying() {
         return mIsPlaying;
+    }
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        final Parcelable superState = super.onSaveInstanceState();
+        return new SavedState(superState, getBpm(), isPlaying());
+    }
+
+    @Override
+    protected void onRestoreInstanceState(final Parcelable stateObject) {
+        final SavedState state = (SavedState) stateObject;
+        super.onRestoreInstanceState(state.superState);
+        setBpm(state.bpm);
+        setPlaying(state.playing);
     }
 
     @Override
@@ -234,6 +251,63 @@ public class BpmView extends View {
         path.close();
 
         mPlayPath = path;
+    }
+
+    public static class SavedState implements Parcelable {
+
+        public static final Parcelable.Creator<SavedState> CREATOR = new ParcelableCreatorImpl();
+
+        public final Parcelable superState;
+        public final Integer bpm;
+        public final boolean playing;
+
+        public SavedState(final Parcelable superState, final Integer bpm, final boolean playing) {
+            this.superState = superState;
+            this.bpm = bpm;
+            this.playing = playing;
+        }
+
+        public SavedState(@NonNull final Parcel parcel) {
+            final ClassLoader classLoader = getClass().getClassLoader();
+            superState = parcel.readParcelable(classLoader);
+            if (parcel.readInt() == 0) {
+                bpm = null;
+            } else {
+                bpm = parcel.readInt();
+            }
+            playing = parcel.readInt() != 0;
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(final Parcel parcel, final int flags) {
+            parcel.writeParcelable(superState, flags);
+            if (bpm == null) {
+                parcel.writeInt(0);
+            } else {
+                parcel.writeInt(1);
+                parcel.writeInt(bpm);
+            }
+            parcel.writeInt(playing ? 1 : 0);
+        }
+
+        private static class ParcelableCreatorImpl implements Parcelable.Creator<SavedState> {
+
+            @Override
+            public SavedState createFromParcel(final Parcel parcel) {
+                return new SavedState(parcel);
+            }
+
+            @Override
+            public SavedState[] newArray(final int size) {
+                return new SavedState[size];
+            }
+        }
+
     }
 
 }

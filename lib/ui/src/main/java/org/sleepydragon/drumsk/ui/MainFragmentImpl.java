@@ -49,12 +49,19 @@ public class MainFragmentImpl extends MainFragment
         mAudioCheckBox = (CheckBox) view.findViewById(R.id.audio);
         mAudioCheckBox.setOnCheckedChangeListener(this);
 
-        final Integer bpm = mTargetFragmentCallbacks.getCurrentBpm();
-        setBpm(bpm == null ? 100 : bpm);
-
         final Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
         final AppCompatActivity activity = (AppCompatActivity) getContext();
         activity.setSupportActionBar(toolbar);
+
+        if (savedInstanceState == null) {
+            mBpmView.setBpm(100);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mTargetFragmentCallbacks.updateUiFromMetronome();
     }
 
     @Override

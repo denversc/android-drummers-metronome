@@ -67,9 +67,7 @@
                 android:layout_gravity="center_horizontal"
                 android:clickable="true"
                 app:circleColor="@color/primary"
-                app:bpm="500"
                 app:textCirclePadding="20dp"
-                app:playing="true"
                 />
 
         </FrameLayout>

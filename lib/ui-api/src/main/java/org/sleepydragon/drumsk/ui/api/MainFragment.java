@@ -88,14 +88,11 @@ public abstract class MainFragment extends Fragment implements MainFragmentApi {
         void onMetronomeConfigChange(@NonNull MainFragment fragment);
 
         /**
-         * Gets the current beats-per-minute to display in the user interface.
-         *
-         * @return the beats-per-minute at which the metronome is running, or null if the metronome
-         * is not running.
+         * Implementation must invoke all of the setter methods to update the UI based on the
+         * current state of the metronome.
          */
         @MainThread
-        @Nullable
-        Integer getCurrentBpm();
+        void updateUiFromMetronome();
 
         /**
          * Gets the current "audio enabled" setting to display in the user interface.
