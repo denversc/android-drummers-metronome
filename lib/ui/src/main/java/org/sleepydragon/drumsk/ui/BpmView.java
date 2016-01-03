@@ -5,12 +5,10 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.support.annotation.NonNull;
+import android.graphics.Path;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
-
-import org.sleepydragon.drumsk.util.Size;
 
 /**
  * A view that allows the user to view and edit the beats-per-minute.
@@ -22,13 +20,18 @@ public class BpmView extends View {
     public static final int DEFAULT_TEXT_CIRCLE_PADDING = 10;
 
     private Integer mBpm;
+    private boolean mIsPlaying;
 
     private final Paint mCirclePaint;
     private float mCircleCenterX;
     private float mCircleCenterY;
     private float mCircleRadius;
 
+    private final Paint mPlayPaint;
+    private Path mPlayPath;
+
     private final Paint mTextPaint;
+    private final Paint mTextOutlinePaint;
     private float mTextX;
     private float mTextY;
     private String mText;
@@ -52,6 +55,7 @@ public class BpmView extends View {
                     R.styleable.BpmView, defStyleAttr, 0);
             circleColor = a.getColor(R.styleable.BpmView_circleColor, DEFAULT_CIRCLE_COLOR);
             textColor = a.getColor(R.styleable.BpmView_textColor, DEFAULT_TEXT_COLOR);
+            mIsPlaying = a.getBoolean(R.styleable.BpmView_playing, false);
             if (a.hasValue(R.styleable.BpmView_bpm)) {
                 bpm = a.getInt(R.styleable.BpmView_bpm, 0);
             } else {
@@ -72,6 +76,14 @@ public class BpmView extends View {
         mTextPaint.setTextAlign(Paint.Align.CENTER);
         mTextPaint.setAntiAlias(true);
 
+        mTextOutlinePaint = new Paint(mTextPaint);
+        mTextOutlinePaint.setColor(mCirclePaint.getColor());
+        mTextOutlinePaint.setStyle(Paint.Style.STROKE);
+
+        mPlayPaint = new Paint();
+        mPlayPaint.setColor(textColor);
+        mPlayPaint.setAlpha(100);
+
         setBpm(bpm);
     }
 
@@ -86,23 +98,35 @@ public class BpmView extends View {
         return mBpm;
     }
 
+    public void setPlaying(final boolean playing) {
+        mIsPlaying = playing;
+        invalidate();
+    }
+
+    public boolean isPlaying() {
+        return mIsPlaying;
+    }
+
     @Override
     protected void onDraw(final Canvas canvas) {
         canvas.drawCircle(mCircleCenterX, mCircleCenterY, mCircleRadius, mCirclePaint);
+        if (mIsPlaying) {
+            canvas.drawPath(mPlayPath, mPlayPaint);
+        }
         if (mText != null) {
+            canvas.drawText(mText, mTextX, mTextY, mTextOutlinePaint);
             canvas.drawText(mText, mTextX, mTextY, mTextPaint);
         }
     }
 
     @Override
     protected void onMeasure(final int widthMeasureSpec, final int heightMeasureSpec) {
-        final Size size = onMeasureCircle(widthMeasureSpec, heightMeasureSpec);
+        onMeasureCircle(widthMeasureSpec, heightMeasureSpec);
         onMeasureText();
-        setMeasuredDimension(size.width, size.height);
+        onMeasurePlay();
     }
 
-    @NonNull
-    private Size onMeasureCircle(final int widthMeasureSpec, final int heightMeasureSpec) {
+    private void onMeasureCircle(final int widthMeasureSpec, final int heightMeasureSpec) {
         final int widthSize = MeasureSpec.getSize(widthMeasureSpec);
         final int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         final int heightSize = MeasureSpec.getSize(heightMeasureSpec);
@@ -156,7 +180,7 @@ public class BpmView extends View {
 
         final int measuredWidth = diameter + paddingLeft + paddingRight;
         final int measuredHeight = diameter + paddingTop + paddingBottom;
-        return new Size(measuredWidth, measuredHeight);
+        setMeasuredDimension(measuredWidth, measuredHeight);
     }
 
     private void onMeasureText() {
@@ -167,6 +191,7 @@ public class BpmView extends View {
         final float maxHypotenuse = diameter - mTextCirclePadding;
         if (maxHypotenuse < 0f) {
             mTextPaint.setTextSize(1);
+            mTextOutlinePaint.setTextSize(1);
             return;
         }
 
@@ -175,6 +200,7 @@ public class BpmView extends View {
         while (true) {
             final float cur = min + ((max - min) / 2f);
             mTextPaint.setTextSize(cur);
+            mTextOutlinePaint.setTextSize(cur);
 
             final float width = mTextPaint.measureText("999");
             final float ascent = Math.abs(mTextPaint.ascent());
@@ -191,6 +217,23 @@ public class BpmView extends View {
                 }
             }
         }
+    }
+
+    private void onMeasurePlay() {
+        final float x1 = mCircleCenterX - (mCircleRadius / 2f);
+        final float y1 = mCircleCenterY - (mCircleRadius / 2f);
+        final float x2 = mCircleCenterX + (mCircleRadius / 2f);
+        final float y2 = mCircleCenterY;
+        final float x3 = mCircleCenterX - (mCircleRadius / 2f);
+        final float y3 = mCircleCenterY + (mCircleRadius / 2f);
+
+        final Path path = new Path();
+        path.moveTo(x1, y1);
+        path.lineTo(x2, y2);
+        path.lineTo(x3, y3);
+        path.close();
+
+        mPlayPath = path;
     }
 
 }

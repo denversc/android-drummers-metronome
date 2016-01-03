@@ -57,6 +57,14 @@ public abstract class MainFragment extends Fragment implements MainFragmentApi {
     @MainThread
     public abstract void setVibrateEnabled(final boolean enabled);
 
+    /**
+     * Sets whether or not the metronome is currently running.
+     *
+     * @param running true if metronome is running, false if not.
+     */
+    @MainThread
+    public abstract void setMetronomeRunning(final boolean running);
+
     public interface TargetFragmentCallbacks {
 
         /**

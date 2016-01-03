@@ -215,14 +215,27 @@ public class WorkFragment extends Fragment
     public void onServiceConnected(final ComponentName name, final IBinder service) {
         mLifecycleLogger.onServiceConnected(name, service);
         mMetronomeService = IMetronomeService.Stub.asInterface(service);
+        notifyHostOfMetronomeState();
+    }
 
+    @MainThread
+    private void notifyHostOfMetronomeState() {
         final HostCallbacks hostCallbacks = (HostCallbacks) getContext();
-        if (hostCallbacks != null) {
-            final MetronomeConfig config = getMetronomeConfig();
-            if (config != null) {
-                hostCallbacks.onMetronomeChanged(this, config);
-            }
+        if (hostCallbacks == null) {
+            return;
         }
+
+        final MetronomeConfig config = getMetronomeConfig();
+
+        final boolean running;
+        try {
+            running = mMetronomeService.isStarted();
+        } catch (RemoteException e) {
+            mLogger.e(e, "MetronomeService.isStarted() failed");
+            return;
+        }
+
+        hostCallbacks.onMetronomeChanged(this, running, config);
     }
 
     @Override
@@ -235,7 +248,8 @@ public class WorkFragment extends Fragment
     public interface HostCallbacks {
 
         @MainThread
-        void onMetronomeChanged(@NonNull WorkFragment fragment, @NonNull MetronomeConfig config);
+        void onMetronomeChanged(@NonNull WorkFragment fragment, boolean running,
+                @Nullable MetronomeConfig config);
 
     }
 

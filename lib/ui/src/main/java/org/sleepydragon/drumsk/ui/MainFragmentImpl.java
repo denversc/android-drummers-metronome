@@ -95,9 +95,17 @@ public class MainFragmentImpl extends MainFragment
     }
 
     @Override
+    public void setMetronomeRunning(final boolean running) {
+        mBpmView.setPlaying(running);
+    }
+
+    @Override
     public void onClick(final View view) {
         if (view == mBpmView) {
-            mTargetFragmentCallbacks.onMetronomeToggle(this);
+            final Boolean running = mTargetFragmentCallbacks.onMetronomeToggle(this);
+            if (running != null) {
+                setMetronomeRunning(running);
+            }
         } else {
             throw new IllegalArgumentException("unknown view: " + view);
         }
