@@ -13,7 +13,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 
 import org.sleepydragon.drumsk.metronome.IMetronomeService;
-import org.sleepydragon.drumsk.metronome.Metronome;
 import org.sleepydragon.drumsk.metronome.MetronomeConfig;
 import org.sleepydragon.drumsk.metronome.MetronomeService;
 import org.sleepydragon.drumsk.ui.api.MainFragment;
@@ -91,11 +90,13 @@ public class WorkFragment extends Fragment
         final boolean audioEnabled = fragment.isAudioEnabled();
         final boolean vibrateEnabled = fragment.isVibrateEnabled();
         final Integer bpm = fragment.getBpm();
+        final int minBpm = MetronomeService.getMinBpm();
+        final int maxBpm = MetronomeService.getMaxBpm();
         if (bpm == null) {
             return null;
-        } else if (bpm < Metronome.BPM_MIN || bpm > Metronome.BPM_MAX) {
+        } else if (bpm < minBpm || bpm > maxBpm) {
             mLogger.w("invalid BPM: %d (must be greater than or equal to %d and less than "
-                    + "or equal to %d)", bpm, Metronome.BPM_MIN, Metronome.BPM_MAX);
+                    + "or equal to %d)", bpm, minBpm, maxBpm);
             return null;
         }
 

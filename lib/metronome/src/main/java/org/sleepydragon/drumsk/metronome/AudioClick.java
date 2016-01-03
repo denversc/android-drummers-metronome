@@ -9,7 +9,7 @@ import org.sleepydragon.drumsk.util.compat.SoundPoolCompat;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AudioClick extends Click {
+class AudioClick extends Click {
 
     @NonNull
     private final AtomicInteger mNextPriority;

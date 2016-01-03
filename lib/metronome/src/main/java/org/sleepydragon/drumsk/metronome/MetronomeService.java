@@ -89,6 +89,14 @@ public class MetronomeService extends Service {
         mLifecycleLogger.onRebind(intent);
     }
 
+    public static int getMinBpm() {
+        return Metronome.BPM_MIN;
+    }
+
+    public static int getMaxBpm() {
+        return Metronome.BPM_MAX;
+    }
+
     private class IMetronomeServiceImpl extends IMetronomeService.Stub {
 
         private final Metronome mMetronome;

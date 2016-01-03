@@ -20,7 +20,7 @@ import static org.sleepydragon.drumsk.util.Assert.assertMainThread;
 import static org.sleepydragon.drumsk.util.Assert.assertNotNull;
 import static org.sleepydragon.drumsk.util.Assert.assertTrue;
 
-public class Metronome {
+class Metronome {
 
     public static final int BPM_MIN = 1;
     public static final int BPM_MAX = 1000;

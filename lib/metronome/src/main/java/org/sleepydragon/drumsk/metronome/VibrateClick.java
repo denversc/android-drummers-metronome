@@ -5,7 +5,7 @@ import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 
-public class VibrateClick extends Click {
+class VibrateClick extends Click {
 
     private Vibrator mVibrator;
 
