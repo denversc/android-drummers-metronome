@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     >
 
@@ -11,43 +11,69 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
         android:theme="@style/Style.Drumsk.Toolbar"
         app:title="@string/app_name"
         />
 
-    <CheckBox
-        android:id="@+id/audio"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:paddingTop="20dp"
-        android:paddingBottom="20dp"
-        android:text="Audio"
-        />
+        android:layout_margin="20dp"
+        >
 
-    <CheckBox
-        android:id="@+id/vibrate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/audio"
-        android:paddingTop="20dp"
-        android:paddingBottom="20dp"
-        android:text="Vibrate"
-        />
+        <LinearLayout
+            android:id="@+id/checkboxes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:orientation="vertical"
+            >
 
-    <org.sleepydragon.drumsk.ui.BpmView
-        android:id="@+id/bpm"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/vibrate"
-        android:layout_below="@id/toolbar"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="30dp"
-        android:clickable="true"
-        app:circleColor="@color/primary"
-        app:bpm="500"
-        app:textCirclePadding="20dp"
-        />
+            <CheckBox
+                android:id="@+id/audio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp"
+                android:text="Audio"
+                />
 
-</RelativeLayout>
+            <CheckBox
+                android:id="@+id/vibrate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp"
+                android:text="Vibrate"
+                />
+
+        </LinearLayout>
+
+        <!--
+        This unnecessary FrameLayout helps work around a weird behaviour where the BpmView was using a
+        width too large and causing it to appear to the left of center in landscape mode
+        -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_above="@id/checkboxes"
+            >
+
+            <org.sleepydragon.drumsk.ui.BpmView
+                android:id="@+id/bpm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:clickable="true"
+                app:circleColor="@color/primary"
+                app:bpm="500"
+                app:textCirclePadding="20dp"
+                />
+
+        </FrameLayout>
+
+    </RelativeLayout>
+
+
+</LinearLayout>
