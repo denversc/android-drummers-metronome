@@ -25,6 +25,8 @@ public class BpmView extends View {
     private Integer mBpm;
     private boolean mIsPlaying;
 
+    private boolean mMeasurementsValid;
+
     private final Paint mCirclePaint;
     private float mCircleCenterX;
     private float mCircleCenterY;
@@ -126,6 +128,12 @@ public class BpmView extends View {
 
     @Override
     protected void onDraw(final Canvas canvas) {
+        if (!mMeasurementsValid) {
+            measureText();
+            measurePlay();
+            mMeasurementsValid = true;
+        }
+
         canvas.drawCircle(mCircleCenterX, mCircleCenterY, mCircleRadius, mCirclePaint);
         if (mIsPlaying) {
             canvas.drawPath(mPlayPath, mPlayPaint);
@@ -138,12 +146,6 @@ public class BpmView extends View {
 
     @Override
     protected void onMeasure(final int widthMeasureSpec, final int heightMeasureSpec) {
-        onMeasureCircle(widthMeasureSpec, heightMeasureSpec);
-        onMeasureText();
-        onMeasurePlay();
-    }
-
-    private void onMeasureCircle(final int widthMeasureSpec, final int heightMeasureSpec) {
         final int widthSize = MeasureSpec.getSize(widthMeasureSpec);
         final int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         final int heightSize = MeasureSpec.getSize(heightMeasureSpec);
@@ -198,9 +200,11 @@ public class BpmView extends View {
         final int measuredWidth = diameter + paddingLeft + paddingRight;
         final int measuredHeight = diameter + paddingTop + paddingBottom;
         setMeasuredDimension(measuredWidth, measuredHeight);
+
+        mMeasurementsValid = false;
     }
 
-    private void onMeasureText() {
+    private void measureText() {
         mTextX = mCircleCenterX;
         mTextY = mCircleCenterY;
 
@@ -236,7 +240,7 @@ public class BpmView extends View {
         }
     }
 
-    private void onMeasurePlay() {
+    private void measurePlay() {
         final float x1 = mCircleCenterX - (mCircleRadius / 2f);
         final float y1 = mCircleCenterY - (mCircleRadius / 2f);
         final float x2 = mCircleCenterX + (mCircleRadius / 2f);
