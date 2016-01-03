@@ -85,8 +85,9 @@ public class WorkFragment extends Fragment
         }
     }
 
+    @Nullable
     @MainThread
-    private Boolean startMetronome(@NonNull final MainFragment fragment) {
+    private MetronomeConfig createConfigFromUi(@NonNull final MainFragment fragment) {
         final boolean audioEnabled = fragment.isAudioEnabled();
         final boolean vibrateEnabled = fragment.isVibrateEnabled();
         final Integer bpm = fragment.getBpm();
@@ -98,7 +99,16 @@ public class WorkFragment extends Fragment
             return null;
         }
 
-        final MetronomeConfig config = new MetronomeConfig(bpm, audioEnabled, vibrateEnabled);
+        return new MetronomeConfig(bpm, audioEnabled, vibrateEnabled);
+    }
+
+    @MainThread
+    private Boolean startMetronome(@NonNull final MainFragment fragment) {
+        final MetronomeConfig config = createConfigFromUi(fragment);
+        if (config == null) {
+            return null;
+        }
+
         try {
             mMetronomeService.start(config);
         } catch (RemoteException e) {
@@ -127,8 +137,8 @@ public class WorkFragment extends Fragment
             return;
         }
 
-        final Integer bpm = fragment.getBpm();
-        if (bpm == null) {
+        final MetronomeConfig config = createConfigFromUi(fragment);
+        if (config == null) {
             return;
         }
 
@@ -140,7 +150,15 @@ public class WorkFragment extends Fragment
             return;
         }
 
-        if (started) {
+        final boolean startRequired;
+        try {
+            startRequired = mMetronomeService.setConfig(config);
+        } catch (RemoteException e) {
+            mLogger.e(e, "MetronomeService.setConfig() failed");
+            return;
+        }
+
+        if (started && startRequired) {
             stopMetronome();
             startMetronome(fragment);
         }
@@ -200,10 +218,10 @@ public class WorkFragment extends Fragment
 
         final HostCallbacks hostCallbacks = (HostCallbacks) getContext();
         if (hostCallbacks != null) {
-            final Integer bpm = getCurrentBpm();
-            final Boolean audioEnabled = getCurrentAudioEnabled();
-            final Boolean vibrateEnabled = getCurrentVibrateEnabled();
-            hostCallbacks.onMetronomeChanged(this, bpm, audioEnabled, vibrateEnabled);
+            final MetronomeConfig config = getMetronomeConfig();
+            if (config != null) {
+                hostCallbacks.onMetronomeChanged(this, config);
+            }
         }
     }
 
@@ -217,8 +235,7 @@ public class WorkFragment extends Fragment
     public interface HostCallbacks {
 
         @MainThread
-        void onMetronomeChanged(@NonNull WorkFragment fragment, Integer bpm, Boolean audioEnabled,
-                Boolean vibrateEnabled);
+        void onMetronomeChanged(@NonNull WorkFragment fragment, @NonNull MetronomeConfig config);
 
     }
 

@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 
+import org.sleepydragon.drumsk.metronome.MetronomeConfig;
 import org.sleepydragon.drumsk.ui.api.Globals;
 import org.sleepydragon.drumsk.ui.api.MainFragment;
 import org.sleepydragon.drumsk.ui.api.UiFactory;
@@ -62,17 +63,11 @@ public class MainActivity extends AppCompatActivity implements WorkFragment.Host
 
     @Override
     @MainThread
-    public void onMetronomeChanged(@NonNull final WorkFragment fragment, final Integer bpm,
-            final Boolean audioEnabled, final Boolean vibrateEnabled) {
-        if (bpm != null) {
-            mMainFragment.setBpm(bpm);
-        }
-        if (audioEnabled != null) {
-            mMainFragment.setAudioEnabled(audioEnabled);
-        }
-        if (vibrateEnabled != null) {
-            mMainFragment.setVibrateEnabled(vibrateEnabled);
-        }
+    public void onMetronomeChanged(@NonNull final WorkFragment fragment,
+            @NonNull final MetronomeConfig config) {
+        mMainFragment.setBpm(config.bpm);
+        mMainFragment.setAudioEnabled(config.audioEnabled);
+        mMainFragment.setVibrateEnabled(config.vibrateEnabled);
     }
 
 }

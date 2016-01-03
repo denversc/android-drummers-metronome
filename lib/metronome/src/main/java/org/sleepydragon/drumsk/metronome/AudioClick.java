@@ -41,7 +41,7 @@ public class AudioClick extends Click {
 
     @Override
     @WorkerThread
-    public void doClick() {
+    public void click() {
         final SoundPool soundPool = mSoundPool;
         if (soundPool != null) {
             final int priority = mNextPriority.getAndIncrement();

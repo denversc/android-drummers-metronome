@@ -3,7 +3,6 @@ package org.sleepydragon.drumsk.metronome;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -129,7 +128,7 @@ public class MetronomeService extends Service {
         }
 
         @Override
-        public boolean setConfig(final MetronomeConfig config) throws RemoteException {
+        public boolean setConfig(final MetronomeConfig config) {
             return mMetronome.setConfig(config);
         }
 

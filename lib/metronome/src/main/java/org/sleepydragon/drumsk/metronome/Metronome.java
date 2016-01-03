@@ -29,10 +29,7 @@ public class Metronome {
     private HandlerThread mClickHandlerThread;
     private boolean mCreated;
 
-    private volatile boolean mStarted;
-    private MetronomeConfig mConfig;
-    private AudioClick mAudioClick;
-    private VibrateClick mVibrateClick;
+    private Clicker mClicker;
 
     @MainThread
     public void onCreate(@NonNull final Context context) {
@@ -41,15 +38,14 @@ public class Metronome {
         assertNotNull(context);
         mCreated = true;
 
+        final Context appContext = context.getApplicationContext();
+        mClicker = new Clicker(appContext);
+
         mClickHandlerThread = new HandlerThread("MetronomeClick", THREAD_PRIORITY_FOREGROUND);
         mClickHandlerThread.start();
-        mClickHandler = new ClickHandler(mClickHandlerThread.getLooper());
+        mClickHandler = new ClickHandler(mClickHandlerThread.getLooper(), mClicker);
 
-        final Context appContext = context.getApplicationContext();
-        mVibrateClick = new VibrateClick(appContext);
-        mAudioClick = new AudioClick(appContext);
-        mClickHandler.postClickOpen(mAudioClick);
-        mClickHandler.postClickOpen(mVibrateClick);
+        mClickHandler.sendEmptyMessage(ClickHandler.MSG_OPEN);
     }
 
     @MainThread
@@ -60,107 +56,74 @@ public class Metronome {
 
         stop();
 
-        mClickHandler.postClickClose(mAudioClick);
-        mClickHandler.postClickClose(mVibrateClick);
+        mClickHandler.sendEmptyMessage(ClickHandler.MSG_CLOSE);
         mClickHandler.post(new HandlerThreadQuitRunnable(mClickHandlerThread));
-        mClickHandler.close();
     }
 
     @MainThread
     public void start(@NonNull final MetronomeConfig config) {
         assertMainThread();
-        if (config.bpm < BPM_MIN || config.bpm > BPM_MAX) {
-            throw new IllegalArgumentException("invalid bpm: " + config.bpm);
-        }
 
-        mClickHandler.removeMessages(ClickHandler.MSG_CLICK_CLICK);
+        mClickHandler.removeMessages(ClickHandler.MSG_CLICK);
 
-        final long periodMillis = 60_000 / config.bpm;
-        final long nextClickTime = SystemClock.uptimeMillis();
-        mAudioClick.setNextTime(nextClickTime);
-        mAudioClick.setPeriodMillis(periodMillis);
-        mVibrateClick.setNextTime(nextClickTime + 50L);
-        mVibrateClick.setPeriodMillis(periodMillis);
+        mClicker.setStarted(true);
+        mClicker.setConfig(config);
 
-        if (config.audioEnabled) {
-            mClickHandler.postClickClick(mAudioClick);
-        }
-        if (config.vibrateEnabled) {
-            mClickHandler.postClickClick(mVibrateClick);
-        }
-
-        mConfig = config;
-        mStarted = true;
+        mClickHandler.sendEmptyMessage(ClickHandler.MSG_CLICK);
     }
 
     @MainThread
     public void stop() {
         assertMainThread();
-        mClickHandler.removeMessages(ClickHandler.MSG_CLICK_CLICK);
-        mStarted = false;
+        mClicker.setStarted(false);
+        mClickHandler.removeMessages(ClickHandler.MSG_CLICK);
     }
 
     @AnyThread
     public boolean isStarted() {
-        return mStarted;
+        return mClicker.isStarted();
     }
 
     @AnyThread
     @Nullable
     public MetronomeConfig getConfig() {
-        return mConfig;
+        return mClicker.getConfig();
     }
 
     @AnyThread
     public boolean setConfig(@NonNull final MetronomeConfig config) {
-        final MetronomeConfig curConfig = mConfig;
-        mConfig = config;
-        return (curConfig == null || curConfig.bpm != config.bpm);
+        return mClicker.setConfig(config);
     }
 
     private static class ClickHandler extends Handler {
 
-        public static final int MSG_CLICK_OPEN = 1;
-        public static final int MSG_CLICK_CLOSE = 2;
-        public static final int MSG_CLICK_CLICK = 3;
+        public static final int MSG_OPEN = 1;
+        public static final int MSG_CLOSE = 2;
+        public static final int MSG_CLICK = 3;
 
-        private volatile boolean mClosed;
+        @NonNull
+        private final Clicker mClicker;
 
-        public ClickHandler(@NonNull final Looper looper) {
+        public ClickHandler(@NonNull final Looper looper, @NonNull final Clicker clicker) {
             super(looper);
-        }
-
-        @AnyThread
-        public void close() {
-            mClosed = true;
-            removeMessages(MSG_CLICK_OPEN);
-            removeMessages(MSG_CLICK_CLOSE);
+            mClicker = clicker;
         }
 
         @WorkerThread
         @Override
         public void handleMessage(final Message msg) {
             switch (msg.what) {
-                case MSG_CLICK_CLICK: {
-                    if (mClosed) {
-                        break;
-                    }
-                    final Click click = (Click) msg.obj;
-                    click.click();
-                    postClickClick(click);
+                case MSG_CLICK: {
+                    final long nextTime = mClicker.click();
+                    sendEmptyMessageAtTime(MSG_CLICK, nextTime);
                     break;
                 }
-                case MSG_CLICK_OPEN: {
-                    if (mClosed) {
-                        break;
-                    }
-                    final Click click = (Click) msg.obj;
-                    click.open();
+                case MSG_OPEN: {
+                    mClicker.open();
                     break;
                 }
-                case MSG_CLICK_CLOSE: {
-                    final Click click = (Click) msg.obj;
-                    click.close();
+                case MSG_CLOSE: {
+                    mClicker.close();
                     break;
                 }
                 default:
@@ -168,26 +131,102 @@ public class Metronome {
             }
         }
 
-        public void postClickOpen(@NonNull final Click click) {
-            final Message message = Message.obtain();
-            message.what = MSG_CLICK_OPEN;
-            message.obj = click;
-            sendMessage(message);
+    }
+
+    static class Clicker {
+
+        @NonNull
+        private final AudioClick mAudioClick;
+        @NonNull
+        private final VibrateClick mVibrateClick;
+
+        private volatile MetronomeConfig mConfig;
+        private volatile boolean mStarted;
+        private long mClickPeriodMillis;
+        private boolean mNextClickTimeValid;
+        private long mNextClickTime;
+
+        public Clicker(@NonNull final Context context) {
+            mAudioClick = new AudioClick(context);
+            mVibrateClick = new VibrateClick(context);
         }
 
-        public void postClickClose(@NonNull final Click click) {
-            final Message message = Message.obtain();
-            message.what = MSG_CLICK_CLOSE;
-            message.obj = click;
-            sendMessage(message);
+        @AnyThread
+        public boolean setConfig(@NonNull final MetronomeConfig config) {
+            if (config.bpm < BPM_MIN || config.bpm > BPM_MAX) {
+                throw new IllegalArgumentException("invalid bpm: " + config.bpm);
+            }
+
+            final MetronomeConfig oldConfig = mConfig;
+            mConfig = assertNotNull(config);
+
+            if (oldConfig == null || oldConfig.bpm != config.bpm) {
+                mClickPeriodMillis = 60_000 / config.bpm;
+
+                final boolean oldNextClickTimeValid = mNextClickTimeValid;
+                mNextClickTimeValid = false;
+                if (!oldNextClickTimeValid) {
+                    return false;
+                }
+
+                final long oldNextClickTime = mNextClickTime;
+                final long newNextClickTime = SystemClock.uptimeMillis() + mClickPeriodMillis;
+                return (newNextClickTime < oldNextClickTime);
+            } else {
+                return false;
+            }
         }
 
-        public void postClickClick(@NonNull final Click click) {
-            final Message message = Message.obtain();
-            message.what = MSG_CLICK_CLICK;
-            message.obj = click;
-            final long time = click.getNextTime();
-            sendMessageAtTime(message, time);
+        @AnyThread
+        @Nullable
+        public MetronomeConfig getConfig() {
+            return mConfig;
+        }
+
+        public boolean isStarted() {
+            return mStarted;
+        }
+
+        public void setStarted(final boolean started) {
+            mNextClickTimeValid = false;
+            mStarted = started;
+        }
+
+        @WorkerThread
+        public long click() {
+            final long curTime = SystemClock.uptimeMillis();
+            if (!mNextClickTimeValid) {
+                mNextClickTime = curTime + mClickPeriodMillis;
+                mNextClickTimeValid = true;
+            } else {
+                while (mNextClickTime <= curTime) {
+                    mNextClickTime += mClickPeriodMillis;
+                }
+            }
+
+            final MetronomeConfig config = mConfig;
+            if (config != null) {
+                if (config.audioEnabled) {
+                    mAudioClick.click();
+                }
+                if (config.vibrateEnabled) {
+                    mVibrateClick.click();
+                }
+            }
+
+            return mNextClickTime;
+        }
+
+        @WorkerThread
+        public void open() {
+            mAudioClick.open();
+            mVibrateClick.open();
+        }
+
+        @WorkerThread
+        public void close() {
+            mAudioClick.close();
+            mVibrateClick.close();
         }
 
     }

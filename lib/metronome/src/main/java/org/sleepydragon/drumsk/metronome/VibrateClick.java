@@ -27,7 +27,7 @@ public class VibrateClick extends Click {
 
     @Override
     @WorkerThread
-    public void doClick() {
+    public void click() {
         final Vibrator vibrator = mVibrator;
         if (vibrator != null) {
             vibrator.vibrate(30);
