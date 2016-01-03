@@ -29,9 +29,8 @@ public class Metronome {
     private HandlerThread mClickHandlerThread;
     private boolean mCreated;
 
-    private Integer mBpm;
-    private Boolean mAudioEnabled;
-    private Boolean mVibrateEnabled;
+    private volatile boolean mStarted;
+    private MetronomeConfig mConfig;
     private AudioClick mAudioClick;
     private VibrateClick mVibrateClick;
 
@@ -57,8 +56,9 @@ public class Metronome {
     public void onDestroy() {
         assertMainThread();
         assertTrue(mCreated);
-        stop();
         mCreated = false;
+
+        stop();
 
         mClickHandler.postClickClose(mAudioClick);
         mClickHandler.postClickClose(mVibrateClick);
@@ -67,63 +67,55 @@ public class Metronome {
     }
 
     @MainThread
-    public void start(final int bpm, final boolean audioEnabled, final boolean vibrateEnabled) {
+    public void start(@NonNull final MetronomeConfig config) {
         assertMainThread();
-        if (bpm < BPM_MIN || bpm > BPM_MAX) {
-            throw new IllegalArgumentException("invalid bpm: " + bpm);
+        if (config.bpm < BPM_MIN || config.bpm > BPM_MAX) {
+            throw new IllegalArgumentException("invalid bpm: " + config.bpm);
         }
 
-        stop();
+        mClickHandler.removeMessages(ClickHandler.MSG_CLICK_CLICK);
 
-        final long periodMillis = 60_000 / bpm;
+        final long periodMillis = 60_000 / config.bpm;
         final long nextClickTime = SystemClock.uptimeMillis();
         mAudioClick.setNextTime(nextClickTime);
         mAudioClick.setPeriodMillis(periodMillis);
         mVibrateClick.setNextTime(nextClickTime + 50L);
         mVibrateClick.setPeriodMillis(periodMillis);
 
-        if (audioEnabled) {
+        if (config.audioEnabled) {
             mClickHandler.postClickClick(mAudioClick);
         }
-        if (vibrateEnabled) {
+        if (config.vibrateEnabled) {
             mClickHandler.postClickClick(mVibrateClick);
         }
 
-        mBpm = bpm;
-        mAudioEnabled = audioEnabled;
-        mVibrateEnabled = vibrateEnabled;
+        mConfig = config;
+        mStarted = true;
     }
 
     @MainThread
     public void stop() {
         assertMainThread();
         mClickHandler.removeMessages(ClickHandler.MSG_CLICK_CLICK);
-        mBpm = null;
-        mAudioEnabled = null;
-        mVibrateEnabled = null;
+        mStarted = false;
     }
 
     @AnyThread
     public boolean isStarted() {
-        return (mBpm != null);
+        return mStarted;
     }
 
     @AnyThread
     @Nullable
-    public Integer getBpm() {
-        return mBpm;
+    public MetronomeConfig getConfig() {
+        return mConfig;
     }
 
     @AnyThread
-    @Nullable
-    public Boolean isAudioEnabled() {
-        return mAudioEnabled;
-    }
-
-    @AnyThread
-    @Nullable
-    public Boolean isVibrateEnabled() {
-        return mVibrateEnabled;
+    public boolean setConfig(@NonNull final MetronomeConfig config) {
+        final MetronomeConfig curConfig = mConfig;
+        mConfig = config;
+        return (curConfig == null || curConfig.bpm != config.bpm);
     }
 
     private static class ClickHandler extends Handler {

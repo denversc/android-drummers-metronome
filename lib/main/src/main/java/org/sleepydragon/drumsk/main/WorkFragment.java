@@ -14,6 +14,7 @@ import android.support.v4.app.Fragment;
 
 import org.sleepydragon.drumsk.metronome.IMetronomeService;
 import org.sleepydragon.drumsk.metronome.Metronome;
+import org.sleepydragon.drumsk.metronome.MetronomeConfig;
 import org.sleepydragon.drumsk.metronome.MetronomeService;
 import org.sleepydragon.drumsk.ui.api.MainFragment;
 import org.sleepydragon.drumsk.util.LifecycleLogger;
@@ -96,8 +97,10 @@ public class WorkFragment extends Fragment
                     + "or equal to %d)", bpm, Metronome.BPM_MIN, Metronome.BPM_MAX);
             return null;
         }
+
+        final MetronomeConfig config = new MetronomeConfig(bpm, audioEnabled, vibrateEnabled);
         try {
-            mMetronomeService.start(bpm, audioEnabled, vibrateEnabled);
+            mMetronomeService.start(config);
         } catch (RemoteException e) {
             mLogger.e(e, "MetronomeService.start() failed");
             return null;
@@ -143,68 +146,50 @@ public class WorkFragment extends Fragment
         }
     }
 
-    @Override
     @MainThread
     @Nullable
-    public Integer getCurrentBpm() {
+    private MetronomeConfig getMetronomeConfig() {
         assertMainThread();
         if (mMetronomeService == null) {
             return null;
         }
 
-        final int bpm;
         try {
-            bpm = mMetronomeService.getBpm();
+            return mMetronomeService.getConfig();
         } catch (RemoteException e) {
-            mLogger.e(e, "MetronomeService.getBpm() failed");
+            mLogger.e(e, "MetronomeService.getConfig() failed");
             return null;
         }
+    }
 
-        if (bpm < Metronome.BPM_MIN || bpm > Metronome.BPM_MAX) {
+    @Override
+    @MainThread
+    @Nullable
+    public Integer getCurrentBpm() {
+        final MetronomeConfig config = getMetronomeConfig();
+        if (config == null) {
             return null;
         }
-
-        return bpm;
+        if (config.bpm < Metronome.BPM_MIN || config.bpm > Metronome.BPM_MAX) {
+            return null;
+        }
+        return config.bpm;
     }
 
     @Override
     @Nullable
     @MainThread
     public Boolean getCurrentAudioEnabled() {
-        assertMainThread();
-        if (mMetronomeService == null) {
-            return null;
-        }
-
-        final int enabled;
-        try {
-            enabled = mMetronomeService.isAudioEnabled();
-        } catch (RemoteException e) {
-            mLogger.e(e, "MetronomeService.isAudioEnabled() failed");
-            return null;
-        }
-
-        return toBoolean(enabled);
+        final MetronomeConfig config = getMetronomeConfig();
+        return (config == null) ? null : config.audioEnabled;
     }
 
     @Override
     @Nullable
     @MainThread
     public Boolean getCurrentVibrateEnabled() {
-        assertMainThread();
-        if (mMetronomeService == null) {
-            return null;
-        }
-
-        final int enabled;
-        try {
-            enabled = mMetronomeService.isVibrateEnabled();
-        } catch (RemoteException e) {
-            mLogger.e(e, "MetronomeService.isVibrateEnabled() failed");
-            return null;
-        }
-
-        return toBoolean(enabled);
+        final MetronomeConfig config = getMetronomeConfig();
+        return (config == null) ? null : config.vibrateEnabled;
     }
 
     @Override
@@ -227,16 +212,6 @@ public class WorkFragment extends Fragment
     public void onServiceDisconnected(final ComponentName name) {
         mLifecycleLogger.onServiceDisconnected(name);
         mMetronomeService = null;
-    }
-
-    private static Boolean toBoolean(final int value) {
-        if (value == 0) {
-            return false;
-        } else if (value == 1) {
-            return true;
-        } else {
-            return null;
-        }
     }
 
     public interface HostCallbacks {

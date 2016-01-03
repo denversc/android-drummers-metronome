@@ -1,10 +1,11 @@
 package org.sleepydragon.drumsk.metronome;
 
+import org.sleepydragon.drumsk.metronome.MetronomeConfig;
+
 interface IMetronomeService {
-    void start(int bpm, boolean audioEnabled, boolean vibrateEnabled);
+    void start(in MetronomeConfig config);
     void stop();
     boolean isStarted();
-    int getBpm();
-    int isAudioEnabled();
-    int isVibrateEnabled();
+    MetronomeConfig getConfig();
+    boolean setConfig(in MetronomeConfig config);
 }
