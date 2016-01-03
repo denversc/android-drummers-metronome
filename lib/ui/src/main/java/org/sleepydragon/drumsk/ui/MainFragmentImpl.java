@@ -10,13 +10,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 
 import org.sleepydragon.drumsk.ui.api.MainFragment;
 
 import static org.sleepydragon.drumsk.util.Assert.assertNotNull;
 
 public class MainFragmentImpl extends MainFragment
-        implements View.OnClickListener, View.OnLongClickListener {
+        implements View.OnClickListener, View.OnLongClickListener,
+        CheckBox.OnCheckedChangeListener {
 
     private BpmView mBpmView;
     private CheckBox mVibrateCheckBox;
@@ -43,7 +45,9 @@ public class MainFragmentImpl extends MainFragment
         mBpmView.setOnClickListener(this);
         mBpmView.setOnLongClickListener(this);
         mVibrateCheckBox = (CheckBox) view.findViewById(R.id.vibrate);
+        mVibrateCheckBox.setOnCheckedChangeListener(this);
         mAudioCheckBox = (CheckBox) view.findViewById(R.id.audio);
+        mAudioCheckBox.setOnCheckedChangeListener(this);
 
         final Integer bpm = mTargetFragmentCallbacks.getCurrentBpm();
         setBpm(bpm == null ? 100 : bpm);
@@ -117,10 +121,19 @@ public class MainFragmentImpl extends MainFragment
         }
     }
 
+    @Override
+    public void onCheckedChanged(final CompoundButton view, final boolean isChecked) {
+        if (view == mAudioCheckBox || view == mVibrateCheckBox) {
+            mTargetFragmentCallbacks.onMetronomeConfigChange(this);
+        } else {
+            throw new IllegalArgumentException("unknown view: " + view);
+        }
+    }
+
     @MainThread
     void onUserSelectedBpmFromDialog(final int bpm) {
         mBpmView.setBpm(bpm);
-        mTargetFragmentCallbacks.onBpmChange(this);
+        mTargetFragmentCallbacks.onMetronomeConfigChange(this);
     }
 
 }

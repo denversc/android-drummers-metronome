@@ -119,7 +119,7 @@ public class WorkFragment extends Fragment
 
     @Override
     @MainThread
-    public void onBpmChange(@NonNull final MainFragment fragment) {
+    public void onMetronomeConfigChange(@NonNull final MainFragment fragment) {
         if (mMetronomeService == null) {
             return;
         }
