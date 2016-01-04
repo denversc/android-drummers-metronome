@@ -90,11 +90,11 @@ public class MetronomeService extends Service {
     }
 
     public static int getMinBpm() {
-        return Metronome.BPM_MIN;
+        return MetronomeThread.BPM_MIN;
     }
 
     public static int getMaxBpm() {
-        return Metronome.BPM_MAX;
+        return MetronomeThread.BPM_MAX;
     }
 
     private class IMetronomeServiceImpl extends IMetronomeService.Stub {
@@ -132,12 +132,12 @@ public class MetronomeService extends Service {
 
         @Override
         public MetronomeConfig getConfig() {
-            return mMetronome.getConfig();
+            return mMetronome.getMetronomeConfig();
         }
 
         @Override
         public boolean setConfig(final MetronomeConfig config) {
-            return mMetronome.setConfig(config);
+            return mMetronome.setMetronomeConfig(config);
         }
 
     }

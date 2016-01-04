@@ -2,6 +2,7 @@ package org.sleepydragon.drumsk.util;
 
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 public class Assert {
 
@@ -15,6 +16,12 @@ public class Assert {
             throw new AssertionError("object is null");
         }
         return object;
+    }
+
+    public static void assertNull(@Nullable final Object object) {
+        if (object != null) {
+            throw new AssertionError("object is not null: " + object);
+        }
     }
 
     public static void assertTrue(final boolean value) {

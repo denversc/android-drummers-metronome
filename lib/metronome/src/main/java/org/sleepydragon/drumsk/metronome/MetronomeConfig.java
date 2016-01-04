@@ -28,6 +28,22 @@ public class MetronomeConfig implements Parcelable {
     }
 
     @Override
+    public boolean equals(final Object object) {
+        if (object == null) {
+            return false;
+        } else if (object == this) {
+            return true;
+        } else if (!(object instanceof MetronomeConfig)) {
+            return false;
+        } else {
+            final MetronomeConfig other = (MetronomeConfig) object;
+            return bpm == other.bpm
+                    && audioEnabled == other.audioEnabled
+                    && vibrateEnabled == other.vibrateEnabled;
+        }
+    }
+
+    @Override
     public int describeContents() {
         return 0;
     }
